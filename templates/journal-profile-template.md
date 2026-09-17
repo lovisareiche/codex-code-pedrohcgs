@@ -1,6 +1,6 @@
 # Journal Profile Template
 
-Copy this block into `.claude/references/journal-profiles.md` (under the appropriate regional/field section) and fill in every field. Weights for the 6 dispositions must sum to 1.0.
+Copy this block into `.agents/references/journal-profiles.md` (under the appropriate regional/field section) and fill in every field. Weights for the 6 dispositions must sum to 1.0.
 
 ```markdown
 ### Journal Full Name (SHORT)
@@ -66,7 +66,7 @@ The `methods-referee` agent branches on paper type. The default types (econ-cent
 - `formal-theory` — game-theoretic / axiomatic model, no empirics (v1.8.0).
 - `survey-experiment` — survey or framed experiment with randomized manipulation (v1.8.0).
 
-For non-econ fields, add your own types to `.claude/agents/methods-referee.md` by duplicating the rubric block and editing the dimension weights. Examples:
+For non-econ fields, add your own types to `.agents/agents/methods-referee.md` by duplicating the rubric block and editing the dimension weights. Examples:
 
 - **Biology:** `observational / experimental / computational / review`.
 - **Political science:** `case-study / comparative` (note: `formal-theory` and `survey-experiment` already ship, v1.8.0).
@@ -74,6 +74,7 @@ For non-econ fields, add your own types to `.claude/agents/methods-referee.md` b
 
 ## Cross-references
 
-- `.claude/references/journal-profiles.md` — the live calibration file.
-- `.claude/agents/editor.md` — reads profiles, draws referee dispositions.
-- `.claude/skills/review-paper/SKILL.md` — entry point for `--peer [SHORT]`.
+- `.agents/references/journal-profiles.md` — the live calibration file.
+- `.agents/agents/editor.md` — reads profiles, draws referee dispositions.
+- `.agents/skills/review-paper/SKILL.md` — entry point for `--peer [SHORT]`.
+

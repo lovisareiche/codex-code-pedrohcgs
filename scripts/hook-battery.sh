@@ -17,7 +17,7 @@
 #   claim-reconcile.py       numeric claims that a just-edited file can stale
 #
 # Every fixture is built under a mktemp directory that is removed on exit; the
-# real .claude/ tree is never written to, and the throwaway git repository is
+# real .agents/ tree is never written to, and the throwaway git repository is
 # created inside the temp directory, never the repo under test.
 #
 # ISOLATION IS NOT `git -C`. This battery runs inside `.githooks/pre-commit`,
@@ -68,7 +68,7 @@ if [ -z "${DIR:-}" ] || [ ! -d "$DIR" ]; then
     echo "hook-battery: cannot resolve script directory" >&2; exit 2
 fi
 ROOT="$(cd "$DIR/.." && pwd)"
-HOOKS="${HOOK_DIR:-$ROOT/.claude/hooks}"
+HOOKS="${HOOK_DIR:-$ROOT/.agents/hooks}"
 SELF_PATH="$DIR/$(basename "$0")"   # absolute; cases e1-e3 re-enter this script
 
 for h in root-of-trust-guard.py git-guardrails.py claim-reconcile.py; do
@@ -189,10 +189,10 @@ echo ""
 echo "  (a) root-of-trust-guard.py"
 
 cat > "$TMP/a1.json" <<'EOF'
-{"tool_name":"Bash","tool_input":{"command":"printf disabled | tee .claude//settings.json"}}
+{"tool_name":"Bash","tool_input":{"command":"printf disabled | tee .agents//settings.json"}}
 EOF
 cat > "$TMP/a2.json" <<'EOF'
-{"tool_name":"Bash","tool_input":{"command":"cat .claude/settings.json | head -20"}}
+{"tool_name":"Bash","tool_input":{"command":"cat .agents/settings.json | head -20"}}
 EOF
 printf '%s\n' 'this is not json at all {' > "$TMP/a3.json"
 
@@ -209,10 +209,10 @@ expect_silent "a4 documented escape hatch actually disarms the guard"
 # and re-scanned) and a `find ... -delete` of a hook dir — both were bypasses
 # before this fix, so they are pinned as regression cases here.
 cat > "$TMP/a5.json" <<'EOF'
-{"tool_name":"Bash","tool_input":{"command":"bash -c 'printf disabled > .claude/settings.json'"}}
+{"tool_name":"Bash","tool_input":{"command":"bash -c 'printf disabled > .agents/settings.json'"}}
 EOF
 cat > "$TMP/a6.json" <<'EOF'
-{"tool_name":"Bash","tool_input":{"command":"find .claude/hooks -name '*.py' -delete"}}
+{"tool_name":"Bash","tool_input":{"command":"find .agents/hooks -name '*.py' -delete"}}
 EOF
 fire root-of-trust-guard.py "$TMP/a5.json"
 expect_deny   "a5 redirection wrapped in bash -c is unwrapped and denied"
@@ -224,7 +224,7 @@ expect_deny   "a6 find -delete of a hook directory is denied"
 # a quote-stripped copy, so the redirect-mention inside quotes is prose, not a
 # command-line redirect. (Regression: the round-1 fix over-matched this.)
 cat > "$TMP/a7.json" <<'EOF'
-{"tool_name":"Bash","tool_input":{"command":"echo \"to reset a wedged hook: printf '{}' > .claude/settings.json\""}}
+{"tool_name":"Bash","tool_input":{"command":"echo \"to reset a wedged hook: printf '{}' > .agents/settings.json\""}}
 EOF
 fire root-of-trust-guard.py "$TMP/a7.json"
 expect_silent "a7 quoted echo documenting a protected redirection is allowed"
@@ -235,10 +235,10 @@ expect_silent "a7 quoted echo documenting a protected redirection is allowed"
 # `env -i bash -c '<redirect>'` and `nice rm <protected>` both bypassed the
 # guard entirely. Pinned as a regression case so the gap cannot silently regrow.
 cat > "$TMP/a8.json" <<'EOF'
-{"tool_name":"Bash","tool_input":{"command":"env -i bash -c 'printf disabled > .claude/settings.json'"}}
+{"tool_name":"Bash","tool_input":{"command":"env -i bash -c 'printf disabled > .agents/settings.json'"}}
 EOF
 cat > "$TMP/a9.json" <<'EOF'
-{"tool_name":"Bash","tool_input":{"command":"nice rm .claude/hooks/git-guardrails.py"}}
+{"tool_name":"Bash","tool_input":{"command":"nice rm .agents/hooks/git-guardrails.py"}}
 EOF
 fire root-of-trust-guard.py "$TMP/a8.json"
 expect_deny   "a8 flag-carrying wrapper (env -i bash -c) is unwrapped past its flags and denied"
@@ -251,7 +251,7 @@ expect_deny   "a9 bare wrapper deleter (nice rm) reaches the real command and is
 # arg-opts and its value was skipped whole, letting a redirect/deleter of a
 # protected path through. Pinned so the split-string bypass cannot regrow.
 cat > "$TMP/a10.json" <<'EOF'
-{"tool_name":"Bash","tool_input":{"command":"env -S 'printf disabled > .claude/settings.json'"}}
+{"tool_name":"Bash","tool_input":{"command":"env -S 'printf disabled > .agents/settings.json'"}}
 EOF
 fire root-of-trust-guard.py "$TMP/a10.json"
 expect_deny   "a10 env -S split-string carrying a redirect is unwrapped and denied"
@@ -264,10 +264,10 @@ expect_deny   "a10 env -S split-string carrying a redirect is unwrapped and deni
 # same skip_wrappers the rest of the guard uses, and any short-flag group ending
 # in S is treated as the split-string carrier. Pinned so neither bypass regrows.
 cat > "$TMP/a11.json" <<'EOF'
-{"tool_name":"Bash","tool_input":{"command":"nice -n 10 env -S 'printf disabled > .claude/settings.json' true"}}
+{"tool_name":"Bash","tool_input":{"command":"nice -n 10 env -S 'printf disabled > .agents/settings.json' true"}}
 EOF
 cat > "$TMP/a12.json" <<'EOF'
-{"tool_name":"Bash","tool_input":{"command":"env -vS 'printf disabled > .claude/settings.json' true"}}
+{"tool_name":"Bash","tool_input":{"command":"env -vS 'printf disabled > .agents/settings.json' true"}}
 EOF
 fire root-of-trust-guard.py "$TMP/a11.json"
 expect_deny   "a11 wrapper-chained env -S (nice env -S <redirect>) is located past the wrapper and denied"
@@ -284,10 +284,10 @@ expect_deny   "a12 bundled short-flag env -vS <redirect> is recognized as a spli
 # consumed WITH their values, and only a `c` inside a single-dash short group is
 # the real flag. a14 pins the bundled form, which must keep working.
 cat > "$TMP/a13.json" <<'EOF'
-{"tool_name":"Bash","tool_input":{"command":"bash --rcfile /tmp/x -c 'rm .claude/hooks/git-guardrails.py'"}}
+{"tool_name":"Bash","tool_input":{"command":"bash --rcfile /tmp/x -c 'rm .agents/hooks/git-guardrails.py'"}}
 EOF
 cat > "$TMP/a14.json" <<'EOF'
-{"tool_name":"Bash","tool_input":{"command":"bash -ic 'rm .claude/hooks/git-guardrails.py'"}}
+{"tool_name":"Bash","tool_input":{"command":"bash -ic 'rm .agents/hooks/git-guardrails.py'"}}
 EOF
 fire root-of-trust-guard.py "$TMP/a13.json"
 expect_deny   "a13 value-taking shell option (bash --rcfile <f> -c <deleter>) no longer hides the real -c payload"
@@ -305,7 +305,7 @@ fire root-of-trust-guard.py "$TMP/a15.json"
 expect_silent "a15 clean control: the same shell options carrying a HARMLESS payload stay allowed"
 
 # a16-a22: GIT'S OWN working-tree writers. The writer tables named cp/mv/rm/ln/
-# sed -i/dd/find/tar but never git, so `git checkout HEAD~1 -- .claude/settings.json`
+# sed -i/dd/find/tar but never git, so `git checkout HEAD~1 -- .agents/settings.json`
 # restored the root of trust from an arbitrary revision — wiping every hook
 # registration — through a plain shell one-liner with the protected path sitting
 # there as a literal argument, while the semantically identical `cp`/`rm`
@@ -315,25 +315,25 @@ expect_silent "a15 clean control: the same shell options carrying a HARMLESS pay
 # form where the subcommand writes INSIDE the protected directory without ever
 # naming a file in it.
 cat > "$TMP/a16.json" <<'EOF'
-{"tool_name":"Bash","tool_input":{"command":"git checkout HEAD~1 -- .claude/settings.json"}}
+{"tool_name":"Bash","tool_input":{"command":"git checkout HEAD~1 -- .agents/settings.json"}}
 EOF
 cat > "$TMP/a17.json" <<'EOF'
-{"tool_name":"Bash","tool_input":{"command":"git restore .claude/hooks/git-guardrails.py"}}
+{"tool_name":"Bash","tool_input":{"command":"git restore .agents/hooks/git-guardrails.py"}}
 EOF
 cat > "$TMP/a18.json" <<'EOF'
-{"tool_name":"Bash","tool_input":{"command":"git rm .claude/hooks/git-guardrails.py"}}
+{"tool_name":"Bash","tool_input":{"command":"git rm .agents/hooks/git-guardrails.py"}}
 EOF
 cat > "$TMP/a19.json" <<'EOF'
-{"tool_name":"Bash","tool_input":{"command":"git clean -fd .claude/hooks"}}
+{"tool_name":"Bash","tool_input":{"command":"git clean -fd .agents/hooks"}}
 EOF
 cat > "$TMP/a20.json" <<'EOF'
-{"tool_name":"Bash","tool_input":{"command":"git stash push -m wip -- .claude/hooks/git-guardrails.py"}}
+{"tool_name":"Bash","tool_input":{"command":"git stash push -m wip -- .agents/hooks/git-guardrails.py"}}
 EOF
 cat > "$TMP/a21.json" <<'EOF'
-{"tool_name":"Bash","tool_input":{"command":"git mv .claude/hooks/git-guardrails.py /tmp/parked.py"}}
+{"tool_name":"Bash","tool_input":{"command":"git mv .agents/hooks/git-guardrails.py /tmp/parked.py"}}
 EOF
 cat > "$TMP/a22.json" <<'EOF'
-{"tool_name":"Bash","tool_input":{"command":"git -C .claude/hooks clean -fd"}}
+{"tool_name":"Bash","tool_input":{"command":"git -C .agents/hooks clean -fd"}}
 EOF
 fire root-of-trust-guard.py "$TMP/a16.json"
 expect_deny   "a16 git checkout <rev> -- <protected> is a working-tree write and is denied"
@@ -356,10 +356,10 @@ expect_deny   "a22 git -C <protected dir> clean -fd is denied (the writer's work
 # hooks would violate the "when a command is ambiguous, ALLOW it" rule the same
 # way an over-matching parser would.
 cat > "$TMP/a23.json" <<'EOF'
-{"tool_name":"Bash","tool_input":{"command":"git log --oneline -- .claude/settings.json"}}
+{"tool_name":"Bash","tool_input":{"command":"git log --oneline -- .agents/settings.json"}}
 EOF
 cat > "$TMP/a24.json" <<'EOF'
-{"tool_name":"Bash","tool_input":{"command":"git status --porcelain .claude/hooks"}}
+{"tool_name":"Bash","tool_input":{"command":"git status --porcelain .agents/hooks"}}
 EOF
 fire root-of-trust-guard.py "$TMP/a23.json"
 expect_silent "a23 clean control: read-only git (git log -- <protected>) stays allowed"
@@ -368,7 +368,7 @@ expect_silent "a24 clean control: read-only git (git status <protected>) stays a
 
 # a25/a26: SCOPE — THIS project, not the pattern wherever it appears on the
 # machine. `is_protected()` matched path TEXT with no repository anchoring, so
-# the guard denied writes into ANY tree containing `.claude/hooks` or
+# the guard denied writes into ANY tree containing `.agents/hooks` or
 # `.githooks`: a throwaway fixture clone, a second checkout, the user's own
 # ~/.claude — while its deny message asserted the path was "part of THIS
 # repository's root of trust". It bought no protection (this repo's gates are
@@ -379,13 +379,13 @@ expect_silent "a24 clean control: read-only git (git status <protected>) stays a
 # hook ships in); if none resolves, the guard falls back to the text match and
 # says so. a25 pins that the real project path is still denied when the event
 # carries an explicit cwd; a26 pins that the fixture-clone write is allowed.
-mkdir -p "$TMP/rot-clone/.claude/hooks" "$TMP/rot-clone/.githooks"
-printf '{}\n' > "$TMP/rot-clone/.claude/settings.json"
+mkdir -p "$TMP/rot-clone/.agents/hooks" "$TMP/rot-clone/.githooks"
+printf '{}\n' > "$TMP/rot-clone/.agents/settings.json"
 cat > "$TMP/a25.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"printf disabled > .claude/settings.json"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"printf disabled > .agents/settings.json"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a26.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"sed -i '' 's/notify.sh/notifyy.sh/' $TMP/rot-clone/.claude/settings.json"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"sed -i '' 's/notify.sh/notifyy.sh/' $TMP/rot-clone/.agents/settings.json"},"cwd":"$ROOT"}
 EOF
 fire root-of-trust-guard.py "$TMP/a25.json"
 expect_deny   "a25 a write into THIS project's root of trust is denied when the event names its cwd"
@@ -397,7 +397,7 @@ expect_silent "a26 the same write into a fixture clone OUTSIDE the project is al
 # ordinary multi-line command was read as TWO segments and the half carrying the
 # protected path was never scored. Executed against the pre-fix guard: a `rm -f`
 # whose operand sat on the continued line emitted NO decision, and the same
-# string through `bash -c` really deleted `.claude/hooks/git-guardrails.py`;
+# string through `bash -c` really deleted `.agents/hooks/git-guardrails.py`;
 # continued `cp`/`mv`/redirection into `settings.json` were silent too, while
 # every one-line spelling DENIED — the guarantee turned on where the author had
 # put a newline. Continuations are now spliced before tokenising. The two
@@ -416,16 +416,16 @@ JCONT='\\\n'      # `\` + newline  — a POSIX LINE CONTINUATION (joins the line
 JNL='\n'          # a bare newline — an ordinary command SEPARATOR
 JBSNL='\\\\\n'    # `\\` + newline — a literal backslash, then a separator
 cat > "$TMP/a27.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"rm -f ${JCONT}    .claude/hooks/git-guardrails.py"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"rm -f ${JCONT}    .agents/hooks/git-guardrails.py"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a28.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"printf disabled > ${JCONT}    .claude/settings.json"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"printf disabled > ${JCONT}    .agents/settings.json"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a29.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"rm -f /tmp/hook-battery-no-such-file${JNL}cat .claude/settings.json"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"rm -f /tmp/hook-battery-no-such-file${JNL}cat .agents/settings.json"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a30.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"rm -f /tmp/hook-battery-no-such-file${JBSNL}cat .claude/settings.json"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"rm -f /tmp/hook-battery-no-such-file${JBSNL}cat .agents/settings.json"},"cwd":"$ROOT"}
 EOF
 fire root-of-trust-guard.py "$TMP/a27.json"
 expect_deny   "a27 r12: a DELETE of a protected path written across a LINE CONTINUATION is denied (this exact spelling went silent and really removed the guard file)"
@@ -534,12 +534,12 @@ expect_silent "a42 r14 control + SCOPE: the UNWRAPPED spelling of the same op is
 # out of the guard's sight while the shell expanded it to exactly the protected
 # file. Measured at 7eee6b2 with the event cwd at this repository — guard
 # verdict, then what the shell expands the token to:
-#     rm -f .claude/hook?/git-guardrails.py   ALLOW -> .claude/hooks/git-guardrails.py
-#     rm -f .claude/*/git-guardrails.py       ALLOW -> .claude/hooks/git-guardrails.py
-#     rm -f .clau*/hooks/git-guardrails.py    ALLOW -> .claude/hooks/git-guardrails.py
-#     echo x > .claude/settings.jso?          ALLOW -> .claude/settings.json
-#     rm -rf .claude/hook[s]                  ALLOW
-#     rm -f .claude/{hooks,rules}/…           ALLOW -> .claude/hooks/…
+#     rm -f .agents/hook?/git-guardrails.py   ALLOW -> .agents/hooks/git-guardrails.py
+#     rm -f .agents/*/git-guardrails.py       ALLOW -> .agents/hooks/git-guardrails.py
+#     rm -f .clau*/hooks/git-guardrails.py    ALLOW -> .agents/hooks/git-guardrails.py
+#     echo x > .agents/settings.jso?          ALLOW -> .agents/settings.json
+#     rm -rf .agents/hook[s]                  ALLOW
+#     rm -f .agents/{hooks,rules}/…           ALLOW -> .agents/hooks/…
 #     rm -f .githook?/pre-commit              ALLOW -> .githooks/pre-commit
 # while the literal spellings of all three targets DENIED — a one-character
 # edit flipped every denied spelling to allowed. Globbing was on NEITHER
@@ -552,7 +552,7 @@ expect_silent "a42 r14 control + SCOPE: the UNWRAPPED spelling of the same op is
 # up, and one that stayed silent after the pattern half was fixed. Measured.
 #
 # The four controls are what stop this from being "deny anything with a `*`":
-#   a50 — a glob under `.claude/` that names an UNPROTECTED child (`rule?`)
+#   a50 — a glob under `.agents/` that names an UNPROTECTED child (`rule?`)
 #   a51 — a BARE wildcard elsewhere (`rm -f docs/*`). This is the sharp one: a
 #         bare `*` fnmatches every protected name, so the naive fix denies the
 #         most ordinary command in the repo. It must stay silent, and it can,
@@ -561,58 +561,58 @@ expect_silent "a42 r14 control + SCOPE: the UNWRAPPED spelling of the same op is
 #   a53 — SCOPE: the same glob aimed at a clone OUTSIDE the project stays
 #         allowed, so the r11 scoping still holds through the glob path
 cat > "$TMP/a43.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"rm -f .claude/hook?/git-guardrails.py"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"rm -f .agents/hook?/git-guardrails.py"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a44.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"rm -f .claude/*/git-guardrails.py"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"rm -f .agents/*/git-guardrails.py"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a45.json" <<EOF
 {"tool_name":"Bash","tool_input":{"command":"rm -f .clau*/hooks/git-guardrails.py"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a46.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"printf disabled > .claude/settings.jso?"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"printf disabled > .agents/settings.jso?"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a47.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"rm -rf .claude/hook[s]"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"rm -rf .agents/hook[s]"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a48.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"rm -f .claude/{hooks,rules}/git-guardrails.py"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"rm -f .agents/{hooks,rules}/git-guardrails.py"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a49.json" <<EOF
 {"tool_name":"Bash","tool_input":{"command":"rm -f .githook?/pre-commit"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a50.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"rm -f .claude/rule?/deleted-note.md"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"rm -f .agents/rule?/deleted-note.md"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a51.json" <<EOF
 {"tool_name":"Bash","tool_input":{"command":"rm -f docs/*"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a52.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"cat .claude/hook?/git-guardrails.py"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"cat .agents/hook?/git-guardrails.py"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a53.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"rm -f $TMP/rot-clone/.claude/hook?/git-guardrails.py"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"rm -f $TMP/rot-clone/.agents/hook?/git-guardrails.py"},"cwd":"$ROOT"}
 EOF
 fire root-of-trust-guard.py "$TMP/a43.json"
-expect_deny   "a43 r15: a '?' glob in the hooks DIRECTORY name is denied — the shell expands it to .claude/hooks/git-guardrails.py, and this spelling was ALLOWED while the literal one denied"
+expect_deny   "a43 r15: a '?' glob in the hooks DIRECTORY name is denied — the shell expands it to .agents/hooks/git-guardrails.py, and this spelling was ALLOWED while the literal one denied"
 fire root-of-trust-guard.py "$TMP/a44.json"
-expect_deny   "a44 r15: a bare '*' as the child of .claude/ is denied — .claude/*/git-guardrails.py really does expand to the guard file (an ordinary name, not a dotfile)"
+expect_deny   "a44 r15: a bare '*' as the child of .agents/ is denied — .agents/*/git-guardrails.py really does expand to the guard file (an ordinary name, not a dotfile)"
 fire root-of-trust-guard.py "$TMP/a45.json"
 expect_deny   "a45 r15: the metacharacter INSIDE the protected directory name (.clau*/hooks/…) is denied — this one also had to defeat the literal '.claude' fast path in main(), which returned before the scan ran"
 fire root-of-trust-guard.py "$TMP/a46.json"
-expect_deny   "a46 r15: a REDIRECTION whose target is globbed (> .claude/settings.jso?) is denied — the file that decides which hooks fire"
+expect_deny   "a46 r15: a REDIRECTION whose target is globbed (> .agents/settings.jso?) is denied — the file that decides which hooks fire"
 fire root-of-trust-guard.py "$TMP/a47.json"
-expect_deny   "a47 r15: a character CLASS (.claude/hook[s]) is denied"
+expect_deny   "a47 r15: a character CLASS (.agents/hook[s]) is denied"
 fire root-of-trust-guard.py "$TMP/a48.json"
-expect_deny   "a48 r15: a BRACE GROUP (.claude/{hooks,rules}/…) is denied — braces are not globs, the shell emits every alternative whether or not it exists"
+expect_deny   "a48 r15: a BRACE GROUP (.agents/{hooks,rules}/…) is denied — braces are not globs, the shell emits every alternative whether or not it exists"
 fire root-of-trust-guard.py "$TMP/a49.json"
 expect_deny   "a49 r15: the same glob in the .githooks directory name (.githook?/pre-commit) is denied — the other half of the fast-path defect"
 fire root-of-trust-guard.py "$TMP/a50.json"
-expect_silent "a50 r15 control: a glob naming an UNPROTECTED child of .claude/ (rule?) stays allowed — the glob rule did not become 'anything under .claude'"
+expect_silent "a50 r15 control: a glob naming an UNPROTECTED child of .agents/ (rule?) stays allowed — the glob rule did not become 'anything under .claude'"
 fire root-of-trust-guard.py "$TMP/a51.json"
 expect_silent "a51 r15 control, the sharp one: a BARE wildcard elsewhere (rm -f docs/*) stays allowed. A bare '*' fnmatches every protected name, so a naive glob fix denies the most ordinary command in the repo; it is allowed here because bash without dotglob never expands '*' to a DOTFILE"
 fire root-of-trust-guard.py "$TMP/a52.json"
-expect_silent "a52 r15 control: a READ through the same glob (cat .claude/hook?/…) stays allowed — 'every READ is untouched' survives the fix"
+expect_silent "a52 r15 control: a READ through the same glob (cat .agents/hook?/…) stays allowed — 'every READ is untouched' survives the fix"
 fire root-of-trust-guard.py "$TMP/a53.json"
 expect_silent "a53 r15 control + SCOPE: the same glob aimed at a clone OUTSIDE the project stays allowed, so r11's project scoping still holds on the glob path"
 
@@ -638,35 +638,35 @@ expect_silent "a55 r15 control: a -C chain that composes its way back OUT of the
 # a56-a60 (r16): PARENT-DIRECTORY (`..`) SEGMENTS. normalize() collapsed `//`
 # and `/./` but not `/../`, and the segment walk then read the segments AS
 # WRITTEN — so a path that pivots through an UNPROTECTED real child of
-# `.claude/` and climbs back into a protected one was not recognised, while the
+# `.agents/` and climbs back into a protected one was not recognised, while the
 # shell resolved it to exactly the gate-defining file. Measured at 7b8848d
-# against a throwaway fixture tree: `rm -f .claude/rules/../hooks/git-guardrails.py`
-# went SILENT and really deleted the guard; `echo x > .claude/rules/../settings.json`
+# against a throwaway fixture tree: `rm -f .agents/rules/../hooks/git-guardrails.py`
+# went SILENT and really deleted the guard; `echo x > .agents/rules/../settings.json`
 # went SILENT and really rewrote settings.json; both literal twins DENIED.
 # a59/a60 are the controls the fix must not buy its recall by breaking: an
 # ordinary `..` outside the root of trust, and a READ through the very spelling
 # a56 denies.
 cat > "$TMP/a56.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"rm -f .claude/rules/../hooks/git-guardrails.py"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"rm -f .agents/rules/../hooks/git-guardrails.py"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a57.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"echo disabled > .claude/rules/../settings.json"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"echo disabled > .agents/rules/../settings.json"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a58.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"rm -f .claude/agents/../settings.local.json"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"rm -f .agents/agents/../settings.local.json"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a59.json" <<EOF
 {"tool_name":"Bash","tool_input":{"command":"rm -f scripts/../docs/index.html"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a60.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"cat .claude/rules/../settings.json | head -20"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"cat .agents/rules/../settings.json | head -20"},"cwd":"$ROOT"}
 EOF
 fire root-of-trust-guard.py "$TMP/a56.json"
-expect_deny   "a56 r16: a path that pivots through an unprotected sibling and climbs back in (.claude/rules/../hooks/git-guardrails.py) is denied — the shell deletes the guard, and the raw segment walk saw 'rules' after '.claude' and went silent"
+expect_deny   "a56 r16: a path that pivots through an unprotected sibling and climbs back in (.agents/rules/../hooks/git-guardrails.py) is denied — the shell deletes the guard, and the raw segment walk saw 'rules' after '.claude' and went silent"
 fire root-of-trust-guard.py "$TMP/a57.json"
-expect_deny   "a57 r16: the same shape reaching settings.json (.claude/rules/../settings.json) is denied"
+expect_deny   "a57 r16: the same shape reaching settings.json (.agents/rules/../settings.json) is denied"
 fire root-of-trust-guard.py "$TMP/a58.json"
-expect_deny   "a58 r16: any real unprotected child works as the pivot (.claude/agents/../settings.local.json) — the class is the spelling, not the one directory"
+expect_deny   "a58 r16: any real unprotected child works as the pivot (.agents/agents/../settings.local.json) — the class is the spelling, not the one directory"
 fire root-of-trust-guard.py "$TMP/a59.json"
 expect_silent 'a59 r16 control: an ORDINARY `..` outside the root of trust (scripts/../docs/index.html) stays allowed — resolving `..` did not become denying every path that carries one'
 fire root-of-trust-guard.py "$TMP/a60.json"
@@ -681,9 +681,9 @@ expect_silent "a60 r16 control: a READ through the very spelling a57 denies stay
 # redirect on line 2 both went SILENT; with line 1 = `echo hi` both DENIED, and
 # bash runs line 2 in every case. a63 is the control in the other direction: a
 # REAL heredoc body is still prose and must still be dropped.
-A61_CMD='tr a-z A-Z <<< hello\nrm -f .claude/hooks/git-guardrails.py'
-A62_CMD='echo \"docs: use <<EOF\"\nprintf disabled > .claude/settings.json'
-A63_CMD='cat <<'"'"'EOF'"'"' > notes.md\nrm -f .claude/hooks/git-guardrails.py\nEOF'
+A61_CMD='tr a-z A-Z <<< hello\nrm -f .agents/hooks/git-guardrails.py'
+A62_CMD='echo \"docs: use <<EOF\"\nprintf disabled > .agents/settings.json'
+A63_CMD='cat <<'"'"'EOF'"'"' > notes.md\nrm -f .agents/hooks/git-guardrails.py\nEOF'
 cat > "$TMP/a61.json" <<EOF
 {"tool_name":"Bash","tool_input":{"command":"$A61_CMD"},"cwd":"$ROOT"}
 EOF
@@ -698,10 +698,10 @@ expect_deny   "a61 r16: a HERESTRING on line 1 (tr a-z A-Z <<< hello) no longer 
 fire root-of-trust-guard.py "$TMP/a62.json"
 expect_deny   "a62 r16: a <<WORD inside a QUOTED string on line 1 no longer opens a heredoc — the redirect into settings.json on line 2 is seen and denied"
 fire root-of-trust-guard.py "$TMP/a63.json"
-expect_silent 'a63 r16 control: a REAL heredoc body is still dropped — a body that merely documents `rm .claude/hooks/x` is prose, not a command, and quote-awareness did not buy its recall by keeping every body'
+expect_silent 'a63 r16 control: a REAL heredoc body is still dropped — a body that merely documents `rm .agents/hooks/x` is prose, not a command, and quote-awareness did not buy its recall by keeping every body'
 
 # a64 (r16): the hook's REGISTERED timeout. A PreToolUse guard says 'deny' by
-# writing a decision; the harness kills it at the timeout in .claude/settings.json
+# writing a decision; the harness kills it at the timeout in .agents/settings.json
 # and a killed hook has written NOTHING, which is exactly what an allow looks
 # like. So the registration is pinned against the number the hook itself states.
 A64=""
@@ -714,7 +714,7 @@ for gs in d["hooks"].get("PreToolUse",[]):
     for h in gs["hooks"]:
         if "root-of-trust-guard.py" in h.get("command",""):
             print(h.get("timeout")); break
-' "$ROOT/.claude/settings.json" 2>/dev/null)"
+' "$ROOT/.agents/settings.json" 2>/dev/null)"
     if [ -z "$ROT_REG" ]; then
         A64="ROOT-OF-TRUST-NOT-REGISTERED: no PreToolUse entry names the hook"
     elif [ "$(python3 -c "print(float('$ROT_REG') == float('$ROT_DECL'))" 2>/dev/null)" = "True" ]; then
@@ -726,7 +726,7 @@ else
     A64="NO-DECLARED-BOUND: root-of-trust-guard.py states no _HOOK_REGISTERED_TIMEOUT"
 fi
 verdict "$A64"
-expect_contains "a64 r16: root-of-trust-guard.py's registered timeout in .claude/settings.json equals the bound the hook itself declares — a deny branch that cannot RETURN inside the registration does not exist, because a killed hook emits nothing and nothing is what an ALLOW looks like" \
+expect_contains "a64 r16: root-of-trust-guard.py's registered timeout in .agents/settings.json equals the bound the hook itself declares — a deny branch that cannot RETURN inside the registration does not exist, because a killed hook emits nothing and nothing is what an ALLOW looks like" \
                 "registration-matches-the-declared-bound"
 
 # a65-a67 (r17): THE COMMENT BLINDNESS THE r16 FIX INTRODUCED. r16 taught the
@@ -741,9 +741,9 @@ expect_contains "a64 r16: root-of-trust-guard.py's registered timeout in .claude
 # REAL opener followed by a TRAILING comment must still open, so the body is
 # still dropped as prose — comment-awareness must not have bought its recall by
 # keeping every heredoc body.
-A65_CMD='# regenerate the config with a heredoc <<EOF\nrm -f .claude/hooks/git-guardrails.py'
-A66_CMD='echo hi   # uses <<EOF here\nprintf disabled > .claude/settings.json'
-A67_CMD='cat <<'"'"'EOF'"'"' > notes.md  # write the notes\nrm -f .claude/hooks/git-guardrails.py\nEOF'
+A65_CMD='# regenerate the config with a heredoc <<EOF\nrm -f .agents/hooks/git-guardrails.py'
+A66_CMD='echo hi   # uses <<EOF here\nprintf disabled > .agents/settings.json'
+A67_CMD='cat <<'"'"'EOF'"'"' > notes.md  # write the notes\nrm -f .agents/hooks/git-guardrails.py\nEOF'
 cat > "$TMP/a65.json" <<EOF
 {"tool_name":"Bash","tool_input":{"command":"$A65_CMD"},"cwd":"$ROOT"}
 EOF
@@ -758,7 +758,7 @@ expect_deny   "a65 r17: a FULL-LINE comment naming a heredoc (# … <<EOF) no lo
 fire root-of-trust-guard.py "$TMP/a66.json"
 expect_deny   "a66 r17: a TRAILING comment naming a heredoc (echo hi # uses <<EOF here) no longer suppresses line 2 — the redirect into settings.json is seen and denied"
 fire root-of-trust-guard.py "$TMP/a67.json"
-expect_silent 'a67 r17 control: a REAL heredoc opener with a trailing comment after it still OPENS, so its body documenting `rm .claude/hooks/x` is still dropped as prose — comment-awareness did not buy its recall by keeping every body'
+expect_silent 'a67 r17 control: a REAL heredoc opener with a trailing comment after it still OPENS, so its body documenting `rm .agents/hooks/x` is still dropped as prose — comment-awareness did not buy its recall by keeping every body'
 
 # a68-a76 (r18): `>&` — THE REDIRECTION SPELLING THAT WAS IN NO SURFACE AT ALL.
 # bash's csh-style `>&<word>` redirects stdout AND stderr to <word> whenever
@@ -768,7 +768,7 @@ expect_silent 'a67 r17 control: a REAL heredoc opener with a trailing comment af
 # segment (out of reach of the `idx + 1` lookahead), and the quote-naive
 # backstop could not recover it either because `_REDIR`'s target class excludes
 # `&`. Measured at e0c4cdb against a throwaway fixture holding a real
-# settings.json: `bash -c 'echo CLOBBERED >& .claude/settings.json'` exited 0
+# settings.json: `bash -c 'echo CLOBBERED >& .agents/settings.json'` exited 0
 # with empty stderr and left the file containing exactly 'CLOBBERED', while the
 # guard fired on the same string said NOTHING — against `&>`, `>` and `>|`
 # spellings of the identical write, all three of which DENIED.
@@ -779,16 +779,16 @@ expect_silent 'a67 r17 control: a REAL heredoc opener with a trailing comment af
 # shell script. a75/a76 keep the other two directions honest: a `>&` aimed
 # somewhere unprotected, and a `>&` that only appears INSIDE quotes as prose.
 cat > "$TMP/a68.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"echo CLOBBERED >& .claude/settings.json"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"echo CLOBBERED >& .agents/settings.json"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a69.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"echo CLOBBERED >&.claude/settings.json"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"echo CLOBBERED >&.agents/settings.json"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a70.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"echo CLOBBERED >& .claude/hooks/git-guardrails.py"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"echo CLOBBERED >& .agents/hooks/git-guardrails.py"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a71.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"bash -c 'echo CLOBBERED >& .claude/settings.json'"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"bash -c 'echo CLOBBERED >& .agents/settings.json'"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a72.json" <<EOF
 {"tool_name":"Bash","tool_input":{"command":"echo diagnostic >&2"},"cwd":"$ROOT"}
@@ -797,20 +797,20 @@ cat > "$TMP/a73.json" <<EOF
 {"tool_name":"Bash","tool_input":{"command":"echo diagnostic 1>&2"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a74.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"ls .claude/hooks 2>&1 | head -3"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"ls .agents/hooks 2>&1 | head -3"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a75.json" <<EOF
 {"tool_name":"Bash","tool_input":{"command":"echo building >& docs/build.log"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a76.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"echo \"to wedge a hook you would run: printf x >& .claude/settings.json\""},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"echo \"to wedge a hook you would run: printf x >& .agents/settings.json\""},"cwd":"$ROOT"}
 EOF
 fire root-of-trust-guard.py "$TMP/a68.json"
-expect_deny   "a68 r18: the csh-style redirect-both (echo CLOBBERED >& .claude/settings.json) is denied — it truncates the file that registers every gate, and it was in NEITHER redirection surface while &>, > and >| all denied the identical write"
+expect_deny   "a68 r18: the csh-style redirect-both (echo CLOBBERED >& .agents/settings.json) is denied — it truncates the file that registers every gate, and it was in NEITHER redirection surface while &>, > and >| all denied the identical write"
 fire root-of-trust-guard.py "$TMP/a69.json"
-expect_deny   "a69 r18: the ATTACHED spelling (>&.claude/settings.json) is denied too — no space is needed to reach the file"
+expect_deny   "a69 r18: the ATTACHED spelling (>&.agents/settings.json) is denied too — no space is needed to reach the file"
 fire root-of-trust-guard.py "$TMP/a70.json"
-expect_deny   "a70 r18: the same operator aimed at a HOOK FILE (>& .claude/hooks/git-guardrails.py) is denied — a guard overwritten by its own blind spot"
+expect_deny   "a70 r18: the same operator aimed at a HOOK FILE (>& .agents/hooks/git-guardrails.py) is denied — a guard overwritten by its own blind spot"
 fire root-of-trust-guard.py "$TMP/a71.json"
 expect_deny   "a71 r18: the >& write wrapped in bash -c is unwrapped and denied — the payload carrier and the new operator compose"
 fire root-of-trust-guard.py "$TMP/a72.json"
@@ -830,29 +830,29 @@ expect_silent "a76 r18 CONTROL: a >& into a protected path that appears only INS
 # backslash escapes and nothing else. Bash has two more quote openers and both
 # put a `$` immediately in front of the quote — `$'…'` (ANSI-C, escapes
 # decoded) and `$"…"` (locale translation). The `$` survived into the unquoted
-# word, so `$'.claude/settings.json'` became `$.claude/settings.json`, which
+# word, so `$'.agents/settings.json'` became `$.agents/settings.json`, which
 # matches no protected segment. Measured 2026-08-24 against the shipped guard,
 # event cwd = the project:
 #
-#     echo X > .claude/settings.json             DENY   (control)
-#     echo X > $'.claude/settings.json'          ALLOW (silent)
-#     echo X > $".claude/settings.json"          ALLOW (silent)
-#     rm -f $'.claude/hooks/git-guardrails.py'   ALLOW (silent)
+#     echo X > .agents/settings.json             DENY   (control)
+#     echo X > $'.agents/settings.json'          ALLOW (silent)
+#     echo X > $".agents/settings.json"          ALLOW (silent)
+#     rm -f $'.agents/hooks/git-guardrails.py'   ALLOW (silent)
 #
 # a80 is the sharper one: `$'\x2eclaude/…'` carries NONE of the literal
 # characters of `.claude`, so it also had to get past `_may_name_a_protected_
 # path`, the literal substring fast path that stands in front of the whole scan
 # — the r15 defect one level up, and the same shape as it. What bash really
 # decodes these to was measured with `printf '%s'` on bash 5.3.9, not assumed:
-# `$'\x2eclaude/hooks/x'` -> `.claude/hooks/x`.
+# `$'\x2eclaude/hooks/x'` -> `.agents/hooks/x`.
 #
 # (2) CASE. This repository lives on APFS, which is case-INSENSITIVE by default,
-# so `.CLAUDE/settings.json` and `.claude/settings.json` are ONE file and `RM`
+# so `.CLAUDE/settings.json` and `.agents/settings.json` are ONE file and `RM`
 # really runs rm (`command -v RM` resolves). The segment comparison, the
 # writer-program basename lookups and the fast path were all case-sensitive:
 #
 #     echo X > .CLAUDE/settings.json             ALLOW (silent)
-#     RM -f .claude/hooks/git-guardrails.py      ALLOW (silent)
+#     RM -f .agents/hooks/git-guardrails.py      ALLOW (silent)
 #
 # while both lowercase twins DENIED. The fold is UNCONDITIONAL — no filesystem
 # probe — by the same ruling the r15 glob fix made, so its cost is a false DENY
@@ -869,22 +869,22 @@ expect_silent "a76 r18 CONTROL: a >& into a protected path that appears only INS
 # The literal-twin denies these are measured against are a25 (redirection) and
 # a5/a20 (deleters), which stay green unchanged.
 cat > "$TMP/a77.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"printf disabled > \$'.claude/settings.json'"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"printf disabled > \$'.agents/settings.json'"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a78.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"printf disabled > \$\".claude/settings.json\""},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"printf disabled > \$\".agents/settings.json\""},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a79.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"rm -f \$'.claude/hooks/git-guardrails.py'"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"rm -f \$'.agents/hooks/git-guardrails.py'"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a80.json" <<EOF
 {"tool_name":"Bash","tool_input":{"command":"rm -f \$'\\\\x2eclaude/hooks/git-guardrails.py'"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a81.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"cat \$'.claude/settings.json'"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"cat \$'.agents/settings.json'"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a82.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"rm -f \$'$TMP/rot-clone/.claude/settings.json'"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"rm -f \$'$TMP/rot-clone/.agents/settings.json'"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a83.json" <<EOF
 {"tool_name":"Bash","tool_input":{"command":"echo \$'first line\\\\nsecond line'"},"cwd":"$ROOT"}
@@ -893,7 +893,7 @@ cat > "$TMP/a84.json" <<EOF
 {"tool_name":"Bash","tool_input":{"command":"printf disabled > .CLAUDE/settings.json"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a85.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"RM -f .claude/hooks/git-guardrails.py"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"RM -f .agents/hooks/git-guardrails.py"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a86.json" <<EOF
 {"tool_name":"Bash","tool_input":{"command":"rm -f .Claude/HOOKS/git-guardrails.py"},"cwd":"$ROOT"}
@@ -915,15 +915,15 @@ cat > "$TMP/a91.json" <<EOF
 EOF
 
 fire root-of-trust-guard.py "$TMP/a77.json"
-expect_deny   "a77 r19: an ANSI-C quoted redirection target (> \$'.claude/settings.json') is denied — the \$ was surviving into the unquoted word, so the guard compared \$.claude against .claude and missed, while bash writes the byte-identical file"
+expect_deny   "a77 r19: an ANSI-C quoted redirection target (> \$'.agents/settings.json') is denied — the \$ was surviving into the unquoted word, so the guard compared \$.claude against .claude and missed, while bash writes the byte-identical file"
 fire root-of-trust-guard.py "$TMP/a78.json"
-expect_deny   "a78 r19: the LOCALE-translation spelling (> \$\".claude/settings.json\") is denied — the second opener bash puts a \$ in front of, missed for the same reason"
+expect_deny   "a78 r19: the LOCALE-translation spelling (> \$\".agents/settings.json\") is denied — the second opener bash puts a \$ in front of, missed for the same reason"
 fire root-of-trust-guard.py "$TMP/a79.json"
-expect_deny   "a79 r19: a DELETE of a hook through the ANSI-C spelling (rm -f \$'.claude/hooks/…') is denied — the guard file itself was reachable this way"
+expect_deny   "a79 r19: a DELETE of a hook through the ANSI-C spelling (rm -f \$'.agents/hooks/…') is denied — the guard file itself was reachable this way"
 fire root-of-trust-guard.py "$TMP/a80.json"
-expect_deny   "a80 r19 THE SHARP ONE: an ANSI-C ESCAPE-ENCODED protected path (\$'\\x2eclaude/hooks/…') is denied. It carries none of the literal characters of '.claude', so it also had to get past the literal-substring fast path standing in front of the whole scan — the r15 defect one level up. Bash decodes it to .claude/hooks/… (measured with printf on bash 5.3.9)"
+expect_deny   "a80 r19 THE SHARP ONE: an ANSI-C ESCAPE-ENCODED protected path (\$'\\x2eclaude/hooks/…') is denied. It carries none of the literal characters of '.claude', so it also had to get past the literal-substring fast path standing in front of the whole scan — the r15 defect one level up. Bash decodes it to .agents/hooks/… (measured with printf on bash 5.3.9)"
 fire root-of-trust-guard.py "$TMP/a81.json"
-expect_silent "a81 r19 CONTROL: a READ through the new ANSI-C spelling (cat \$'.claude/settings.json') stays allowed — 'every READ is untouched' survives the fix"
+expect_silent "a81 r19 CONTROL: a READ through the new ANSI-C spelling (cat \$'.agents/settings.json') stays allowed — 'every READ is untouched' survives the fix"
 fire root-of-trust-guard.py "$TMP/a82.json"
 expect_silent "a82 r19 CONTROL, and it fires in BOTH directions: the same ANSI-C spelling aimed at a fixture clone OUTSIDE the project stays allowed, so the r11 project scoping is not weakened by teaching the unquoter a new opener. Seeding the fix back out turns this case RED as well — with the \$ left in the word the ABSOLUTE path became the relative token '\$/…', which in_project() resolves against the project and denies. The quoting hole cost a false DENY here at the same time as it cost the false ALLOWs above"
 fire root-of-trust-guard.py "$TMP/a83.json"
@@ -931,7 +931,7 @@ expect_silent "a83 r19 CONTROL: a \$'…' string that is genuinely just TEXT (ec
 fire root-of-trust-guard.py "$TMP/a84.json"
 expect_deny   "a84 r19: a CASE-VARIED protected directory (> .CLAUDE/settings.json) is denied — APFS is case-insensitive by default, so this is the same file the lowercase twin names, and the twin DENIED while this went silent"
 fire root-of-trust-guard.py "$TMP/a85.json"
-expect_deny   "a85 r19: a CASE-VARIED writer program (RM -f .claude/hooks/…) is denied — 'command -v RM' resolves on this filesystem, so the uppercase spelling really runs rm"
+expect_deny   "a85 r19: a CASE-VARIED writer program (RM -f .agents/hooks/…) is denied — 'command -v RM' resolves on this filesystem, so the uppercase spelling really runs rm"
 fire root-of-trust-guard.py "$TMP/a86.json"
 expect_deny   "a86 r19: case variance in BOTH the protected directory and the protected child (.Claude/HOOKS/…) is denied — the fold is per SEGMENT, not a special case for the top-level name"
 fire root-of-trust-guard.py "$TMP/a87.json"
@@ -954,7 +954,7 @@ expect_silent "a91 r19 CONTROL: the case-varied spelling aimed at a clone OUTSID
 # have denied all of these, never ran. Measured 2026-08-24 at 727a66c, event cwd
 # = the project, guard verdict then what bash actually does:
 #
-#     rm -f .claude/hooks/git-guardrails.py     DENY   (literal control)
+#     rm -f .agents/hooks/git-guardrails.py     DENY   (literal control)
 #     rm -f .clau\de/hooks/git-guardrails.py    ALLOW (silent) -> file DELETED
 #     echo X > .clau\de/settings.json           ALLOW (silent)
 #     rm -f .githook\s/pre-commit               ALLOW (silent)
@@ -979,7 +979,7 @@ expect_silent "a91 r19 CONTROL: the case-varied spelling aimed at a clone OUTSID
 # bash resolves it to a different file entirely, proving the denoise is a
 # TRIGGER and not a verdict. What bash really does with both spellings was
 # measured with printf on bash 5.3.9, not assumed: `.clau\de/hooks/x` ->
-# `.claude/hooks/x` (the guard file), `$'.clau\de/hooks/x'` -> `.clau\de/hooks/x`
+# `.agents/hooks/x` (the guard file), `$'.clau\de/hooks/x'` -> `.clau\de/hooks/x`
 # (an unrecognised ANSI-C escape keeps BOTH characters, so this is a different
 # name). a83 already pins the plain-text `$'…'` control and stays green.
 cat > "$TMP/a92.json" <<EOF
@@ -1048,7 +1048,7 @@ expect_silent "a102 r20 CONTROL, THE SHARP ONE: rm -f \$'.clau\\de/hooks/…' st
 # 0 and an EMPTY stdout — and empty stdout is exactly what an ALLOW looks like,
 # with no way to tell the two apart from outside. Measured 2026-08-24 at
 # 727a66c: with git-guardrails.py replaced by `import sys; sys.exit(0)`, a write
-# into `.claude/hooks/` returned rc=0 and said nothing. A SILENT ALLOW of a
+# into `.agents/hooks/` returned rc=0 and said nothing. A SILENT ALLOW of a
 # gate-file write, caused by the loader for a rule that had not even run yet.
 # Not hypothetical: an audit agent hit it by accident while building a stub and
 # read the spurious result as a finding.
@@ -1067,17 +1067,17 @@ printf 'import sys\nsys.exit(0)\n'                > "$ROT_SE/git-guardrails.py"
 printf "raise RuntimeError('stub blows up')\n"    > "$ROT_EX/git-guardrails.py"
 
 cat > "$TMP/a103.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"rm -f .claude/hooks/git-guardrails.py"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"rm -f .agents/hooks/git-guardrails.py"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a105.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"cat .claude/settings.json"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"cat .agents/settings.json"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a106.json" <<EOF
 {"tool_name":"Bash","tool_input":{"command":"bash -c 'git reset --hard'"},"cwd":"$ROOT"}
 EOF
 
 fire_from "$ROT_SE" root-of-trust-guard.py "$TMP/a103.json"
-expect_deny   "a103 r20 THE MEASURED CASE: with a sibling that calls sys.exit() at IMPORT time, a write into .claude/hooks/ is still DENIED. Before the fix the SystemExit propagated out of exec_module past 'except Exception' and ended this hook with rc=0 and empty stdout — a silent ALLOW of a gate-file write"
+expect_deny   "a103 r20 THE MEASURED CASE: with a sibling that calls sys.exit() at IMPORT time, a write into .agents/hooks/ is still DENIED. Before the fix the SystemExit propagated out of exec_module past 'except Exception' and ended this hook with rc=0 and empty stdout — a silent ALLOW of a gate-file write"
 fire_from "$ROT_EX" root-of-trust-guard.py "$TMP/a103.json"
 expect_deny   "a104 r20 CONTROL, the behaviour that must not regress: a sibling raising an ORDINARY Exception at import STILL fails open — the loader returns None and the hook's own path rules run, so the same write is denied. This case was green before the fix and must stay green"
 fire_from "$ROT_SE" root-of-trust-guard.py "$TMP/a105.json"
@@ -1101,7 +1101,7 @@ cp "$HOOKS/root-of-trust-guard.py" "$ROT_CE/" 2>/dev/null
 printf 'import sys\n\n\ndef git_deny_reason(cmd):\n    sys.exit(0)\n' > "$ROT_CE/git-guardrails.py"
 
 cat > "$TMP/a108.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"bash -c 'rm -f .claude/hooks/git-guardrails.py'"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"bash -c 'rm -f .agents/hooks/git-guardrails.py'"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a109.json" <<EOF
 {"tool_name":"Bash","tool_input":{"command":"bash -c 'ls -la docs'"},"cwd":"$ROOT"}
@@ -1128,7 +1128,7 @@ expect_silent "a109 r20 CONTROL: with that same sibling, a HARMLESS wrapped payl
 # Measured 2026-08-24 at 727a66c, event cwd = the project: `rm -f .clau\` +
 # newline + `de/hooks/git-guardrails.py` was ALLOWED (silent) while the literal
 # twin DENIED, and `printf '%s\n'` on the same string prints ONE word,
-# `.claude/hooks/git-guardrails.py`. a111 is the r11 spelling this splicer was
+# `.agents/hooks/git-guardrails.py`. a111 is the r11 spelling this splicer was
 # written for and must keep working; a112 is the control that a naive
 # "delete the backslash-newline and glue everything" repair fails — a
 # continuation followed by INDENTATION is still two words to bash, and
@@ -1136,14 +1136,14 @@ expect_silent "a109 r20 CONTROL: with that same sibling, a HARMLESS wrapped payl
 printf '%s' '{"tool_name":"Bash","tool_input":{"command":"rm -f .clau\\' > "$TMP/a110.json"
 printf '\\nde/hooks/git-guardrails.py"},"cwd":"%s"}\n' "$ROOT" >> "$TMP/a110.json"
 printf '%s' '{"tool_name":"Bash","tool_input":{"command":"rm -f \\' > "$TMP/a111.json"
-printf '\\n    .claude/hooks/git-guardrails.py"},"cwd":"%s"}\n' "$ROOT" >> "$TMP/a111.json"
+printf '\\n    .agents/hooks/git-guardrails.py"},"cwd":"%s"}\n' "$ROOT" >> "$TMP/a111.json"
 printf '%s' '{"tool_name":"Bash","tool_input":{"command":"rm -f .clau\\' > "$TMP/a112.json"
 printf '\\n   de/hooks/git-guardrails.py"},"cwd":"%s"}\n' "$ROOT" >> "$TMP/a112.json"
 
 fire root-of-trust-guard.py "$TMP/a110.json"
 expect_deny   "a110 r20 THE PROBE'S CASE: a LINE CONTINUATION inside the protected directory name (rm -f .clau\\<newline>de/hooks/…) is denied. bash removes the backslash-newline and runs the deletion on the guard file; this guard substituted a SPACE for it and scored two words that name nothing"
 fire root-of-trust-guard.py "$TMP/a111.json"
-expect_deny   "a111 r20 CONTROL, the r11 spelling this splicer exists for: a continuation at a TOKEN BOUNDARY (rm -f \\<newline>    .claude/hooks/…) is still denied — the leading whitespace of the continued line is what separates the words, so removing the space the splice used to invent changed nothing here"
+expect_deny   "a111 r20 CONTROL, the r11 spelling this splicer exists for: a continuation at a TOKEN BOUNDARY (rm -f \\<newline>    .agents/hooks/…) is still denied — the leading whitespace of the continued line is what separates the words, so removing the space the splice used to invent changed nothing here"
 fire root-of-trust-guard.py "$TMP/a112.json"
 expect_silent "a112 r20 CONTROL, the sharp one: a continuation followed by INDENTATION (rm -f .clau\\<newline>   de/hooks/…) stays allowed — bash removes only the backslash-newline, so this is still the two words '.clau' and 'de/hooks/…' and names nothing protected. A repair that glued the halves unconditionally would false-deny here"
 
@@ -1161,31 +1161,31 @@ A113Q="'"
 printf '%s' '{"tool_name":"Bash","tool_input":{"command":"rm -f $\\' > "$TMP/a113.json"
 printf '\\n%s\\\\x2eclaude/hooks/git-guardrails.py%s"},"cwd":"%s"}\n' "$A113Q" "$A113Q" "$ROOT" >> "$TMP/a113.json"
 cat > "$TMP/a114.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"git clean -n .claude/hooks"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"git clean -n .agents/hooks"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a115.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"git clean --dry-run .claude/hooks"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"git clean --dry-run .agents/hooks"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a116.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"git rm --dry-run .claude/hooks/git-guardrails.py"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"git rm --dry-run .agents/hooks/git-guardrails.py"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a117.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"git clean -fd .claude/hooks"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"git clean -fd .agents/hooks"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a118.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"git clean -nf .claude/hooks"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"git clean -nf .agents/hooks"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a119.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"ln -s .claude/hooks/git-guardrails.py"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"ln -s .agents/hooks/git-guardrails.py"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a120.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"rsync .claude/hooks/"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"rsync .agents/hooks/"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a121.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"ln -s /tmp/x .claude/hooks/git-guardrails.py"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"ln -s /tmp/x .agents/hooks/git-guardrails.py"},"cwd":"$ROOT"}
 EOF
 cat > "$TMP/a122.json" <<EOF
-{"tool_name":"Bash","tool_input":{"command":"cp /tmp/x .claude/settings.json"},"cwd":"$ROOT"}
+{"tool_name":"Bash","tool_input":{"command":"cp /tmp/x .agents/settings.json"},"cwd":"$ROOT"}
 EOF
 fire root-of-trust-guard.py "$TMP/a113.json"
 expect_deny   "a113 r21 THE COMPOSED-IN-ONE-DIRECTION CASE: an ANSI-C opener SPLIT from its quote by a continuation (rm -f \$<continuation>'\\x2eclaude/hooks/...') is denied — r20 spliced only the literal branch, so the \$' branch saw no opener and the escaped dot hid the literal; every trigger now reads the same spliced text"
@@ -1204,7 +1204,7 @@ expect_silent "a119 r21 CONTROL: one-argument ln -s on a protected path stays SI
 fire root-of-trust-guard.py "$TMP/a120.json"
 expect_silent "a120 r21 CONTROL: one-argument rsync of a protected directory stays silent — with a single operand there is no destination on the command line"
 fire root-of-trust-guard.py "$TMP/a121.json"
-expect_deny   "a121 r21 CONTROL, the sharp one: the TWO-operand form writing INTO a protected path (ln -s /tmp/x .claude/hooks/...) still DENIES — requiring a second operand did not disarm the destination rule"
+expect_deny   "a121 r21 CONTROL, the sharp one: the TWO-operand form writing INTO a protected path (ln -s /tmp/x .agents/hooks/...) still DENIES — requiring a second operand did not disarm the destination rule"
 fire root-of-trust-guard.py "$TMP/a122.json"
 expect_deny   "a122 r21 CONTROL: an ordinary two-operand cp INTO the root of trust still DENIES — the DEST_LAST branch is intact for every real write"
 
@@ -2207,7 +2207,7 @@ EOF
 
 # c55/c56 (r16): THE DENY MUST FIT INSIDE THE REGISTRATION. A PreToolUse hook
 # says "deny" by writing a decision to stdout; the harness kills it at the
-# `"timeout"` registered in .claude/settings.json, and a killed hook has written
+# `"timeout"` registered in .agents/settings.json, and a killed hook has written
 # NOTHING — which is exactly what an ALLOW looks like. r15 raised the internal
 # `git status` bound to 10 s so a slow worktree would not wedge a session, while
 # the registration stayed at 5 s, so on that very worktree the deny branch could
@@ -2255,7 +2255,7 @@ for gs in json.load(open(sys.argv[1]))["hooks"].get("PreToolUse", []):
     for h in gs["hooks"]:
         if "git-guardrails.py" in h.get("command", ""):
             print(h.get("timeout"))
-' "$ROOT/.claude/settings.json" 2>/dev/null | head -1)"
+' "$ROOT/.agents/settings.json" 2>/dev/null | head -1)"
 
 if [ -n "$MC_DIRTY_STATUS" ]; then
     fire git-guardrails.py "$TMP/c54.json"
@@ -2267,7 +2267,7 @@ if [ -n "$MC_DIRTY_STATUS" ]; then
                "$TMP/c55.json" "$GG_REG" 2>/dev/null)"
         verdict "$OUT"
     else
-        verdict "NO-REGISTRATION-FOUND: .claude/settings.json registers no timeout for git-guardrails.py"
+        verdict "NO-REGISTRATION-FOUND: .agents/settings.json registers no timeout for git-guardrails.py"
     fi
     expect_contains "c55 r16: with a stalled git and the SHIPPED internal bound, git-guardrails.py still RETURNS a deny inside the timeout it is registered with. A hook killed before it writes a decision is indistinguishable from one that allowed, so a deny branch that cannot finish inside the registration does not exist" \
                     "deny-returned-within-the-registration"
@@ -2281,7 +2281,7 @@ fi
 # silently re-opening the hole. Also proves CLAUDE_GIT_STATUS_TIMEOUT is CLAMPED:
 # the deny message used to tell the user to raise it, which moved them further
 # from a deny, not closer.
-C56="$(python3 - "$HOOKS/git-guardrails.py" "$ROOT/.claude/settings.json" <<'PYEOF' 2>/dev/null
+C56="$(python3 - "$HOOKS/git-guardrails.py" "$ROOT/.agents/settings.json" <<'PYEOF' 2>/dev/null
 import importlib.util, json, os, sys
 spec = importlib.util.spec_from_file_location("_gg_budget_probe", sys.argv[1])
 mod = importlib.util.module_from_spec(spec)
@@ -2312,7 +2312,7 @@ else:
 PYEOF
 )"
 verdict "$C56"
-expect_contains "c56 r16: git-guardrails.py's internal git-status budget is STRICTLY under the timeout it is registered with in .claude/settings.json, both numbers derive from one declared constant, and CLAUDE_GIT_STATUS_TIMEOUT is clamped rather than honoured — an escape hatch that pushes the bound past the registration is a silent allow, not a longer wait" \
+expect_contains "c56 r16: git-guardrails.py's internal git-status budget is STRICTLY under the timeout it is registered with in .agents/settings.json, both numbers derive from one declared constant, and CLAUDE_GIT_STATUS_TIMEOUT is clamped rather than honoured — an escape hatch that pushes the bound past the registration is a silent allow, not a longer wait" \
                 "budget-strictly-under-the-registration"
 
 # ── (c) continued — r18: THE `-C` FOLD WAS LEXICAL, GIT'S IS THE KERNEL'S ──
@@ -2610,3 +2610,4 @@ echo "hook-battery: $FAIL of $TOTAL cases FAILED:"
 for f in "${FAILED[@]}"; do echo "  - $f"; done
 echo "A guard that no longer fires is worse than no guard: it looks like coverage."
 exit 1
+

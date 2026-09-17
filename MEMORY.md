@@ -57,7 +57,7 @@ When a mistake is corrected, append a `[LEARN:category]` entry below; most recen
 
 ## Memory System
 
-[LEARN:memory] Two-tier memory solves template vs working project tension: MEMORY.md (generic patterns, committed) + native auto memory (`~/.claude/projects/<project>/memory/`, machine-local) → cross-machine sync + local privacy. *(Second tier was `personal-memory.md` until v2.5; retired for the native mechanism.)*
+[LEARN:memory] Two-tier memory solves template vs working project tension: MEMORY.md (generic patterns, committed) + native auto memory (`~/.agents/projects/<project>/memory/`, machine-local) → cross-machine sync + local privacy. *(Second tier was `personal-memory.md` until v2.5; retired for the native mechanism.)*
 
 [LEARN:memory] Hooks prompt reflection, don't auto-append (e.g. the Stop-hook session-log reminder) → user maintains control while building habit.
 
@@ -75,7 +75,7 @@ When a mistake is corrected, append a `[LEARN:category]` entry below; most recen
 
 [LEARN:drift] Guard against false positives when scanning for template counts: `"3 parallel agents"`, `"17 specialized agents"` (clo-author attribution), `"start with 2-3 skills"` are all legitimate non-template uses of `N + category` phrases. Use compound patterns requiring multiple template-specific tokens on the same line.
 
-## Claude Code Hooks
+## Codex Hooks
 
 [LEARN:hooks] Stop-hook block protocol has TWO valid forms: (a) legacy — `exit 2` + reason on stderr; (b) modern — `exit 0` + JSON `{"decision":"block","reason":"..."}` on stdout. `log-reminder.py` uses the modern form. Audit agents unfamiliar with the modern protocol will flag this as "should exit 2" — false alarm. Documented in `/deep-audit` skill's false-alarm list.
 
@@ -87,7 +87,7 @@ When a mistake is corrected, append a `[LEARN:category]` entry below; most recen
 
 ## Privacy in Diagnostic Skills
 
-[LEARN:privacy] Diagnostic skills that read host-global config (e.g., `~/.claude/`, VSCode user settings) must require **explicit user confirmation** before crossing the repo boundary — especially in template repos that get forked. Phase the skill: repo-local auto, host-global opt-in with key redaction. Codex correctly flagged this pattern as a template-adopter privacy risk in PR #75.
+[LEARN:privacy] Diagnostic skills that read host-global config (e.g., `~/.agents/`, VSCode user settings) must require **explicit user confirmation** before crossing the repo boundary — especially in template repos that get forked. Phase the skill: repo-local auto, host-global opt-in with key redaction. Codex correctly flagged this pattern as a template-adopter privacy risk in PR #75.
 
 ## Claim-vs-Reality Framing
 
@@ -135,11 +135,11 @@ The key insight: each enforces independence differently — role tension, depend
 
 ## v1.8.0 Cycle Lessons (2026-04-27)
 
-[LEARN:permissions] **Protected-path behavior is mode-dependent — re-verify, never assume** (re-verified 2026-08-22 vs the permission-modes doc: `bypassPermissions` disables prompts and safety checks INCLUDING protected paths — the earlier "`.claude/` always prompts" version of this entry was stale). Auto mode classifier-gates risky actions and since 2026-08-14 is the built-in starting mode on Pro/Max/Team. Forkers in default mode still see prompts on `.claude/` edits.
+[LEARN:permissions] **Protected-path behavior is mode-dependent — re-verify, never assume** (re-verified 2026-08-22 vs the permission-modes doc: `bypassPermissions` disables prompts and safety checks INCLUDING protected paths — the earlier "`.agents/` always prompts" version of this entry was stale). Auto mode classifier-gates risky actions and since 2026-08-14 is the built-in starting mode on Pro/Max/Team. Forkers in default mode still see prompts on `.agents/` edits.
 
 [LEARN:vscode] **`claudeCode.allowDangerouslySkipPermissions` is a typo trap** — the canonical key has NO `claudeCode.` prefix (unlike `claudeCode.initialPermissionMode`). The wrong key is silently ignored. Documented in `TROUBLESHOOTING.md`.
 
-[LEARN:edits] **Batch edits to protected `.claude/` paths: use Bash + `python3` heredoc.** Edit fires the protected-paths gate; Bash does not. For 5+ edits, one read→modify→write script via Bash avoids the prompt storm.
+[LEARN:edits] **Batch edits to protected `.agents/` paths: use Bash + `python3` heredoc.** Edit fires the protected-paths gate; Bash does not. For 5+ edits, one read→modify→write script via Bash avoids the prompt storm.
 
 [LEARN:audit] **Surface-sync checks counts and MARKED tables** (`<!-- surface-sync-table: ... -->`, since v2.0) — tables without the marker are invisible to it (the guide appendix shipped 58 of 60 rows in v2.5 until a semantic sweep caught it). New skill/agent: add the row AND confirm the table is marker-covered or hand-checked.
 
@@ -171,7 +171,7 @@ The key insight: each enforces independence differently — role tension, depend
 
 [LEARN:process] **Plan mode is not optional on a vague, multi-hour ask.** A vague "update our workflow" session with no plan mode, no spec, no `AskUserQuestion` paid the documented 30-50% rework: north star, guide plan, version scheme, and phase framing all rewritten mid-flight — each fixable by a 5-question spec in one turn. **Trigger: vague ask, multiple readings, >1 hour or >3 files → spec first, via `AskUserQuestion`.**
 
-[LEARN:process] **Survey the machine before the world.** An ecosystem review searched the web first and found the owner's own `~/.claude/skills/` and private repos only after being asked — three times; the strongest material was local every time. **Order: own repos and `~/.claude/` → ecosystem → literature.**
+[LEARN:process] **Survey the machine before the world.** An ecosystem review searched the web first and found the owner's own `~/.agents/skills/` and private repos only after being asked — three times; the strongest material was local every time. **Order: own repos and `~/.agents/` → ecosystem → literature.**
 
 [LEARN:framing] **Never write an exclusivity claim into a plan — it propagates to the webpage.** "The only public workflow that..." is unfalsifiable marketing. Use a dated survey finding plus repo-checkable claims. Banned in shipped copy: *the only, the first, nobody else, unmatched, best-in-class*.
 
@@ -181,16 +181,17 @@ The key insight: each enforces independence differently — role tension, depend
 
 [LEARN:audit] **Tool-name drift silently disarms hooks and gates.** When `Task` became `Agent`, 33 skills still declared `Task`, a `Bash|Task` hook matcher stopped firing, and the integrity checker certified the dead contract green. **Migrate tool names by registering both matchers, and source checker tool lists from the current reference, never hard-coded.**
 
-[LEARN:safety] **Promoting a global skill into a public repo is a higher-blast-radius edit than it looks.** A candidate carried an unpublished paper's title and authors in its `description:` — and that field is a shared contract governing model auto-invocation machine-wide, so a global `~/.claude/skills/` edit has *wider* reach than a project one. **Scrub attributions with a fail-closed deny-list scan over publishable surfaces (pre-commit + CI, term list gitignored) before the port begins, and edit `description:` under `blast-radius`.**
+[LEARN:safety] **Promoting a global skill into a public repo is a higher-blast-radius edit than it looks.** A candidate carried an unpublished paper's title and authors in its `description:` — and that field is a shared contract governing model auto-invocation machine-wide, so a global `~/.agents/skills/` edit has *wider* reach than a project one. **Scrub attributions with a fail-closed deny-list scan over publishable surfaces (pre-commit + CI, term list gitignored) before the port begins, and edit `description:` under `blast-radius`.**
 
 [LEARN:audit] **A gate you did not re-qualify is a gate you may no longer have.** It goes quiet two ways: editing a *checked surface* can drop it out of coverage (a rewrite changed the count phrasing, gates stayed green because nothing matched — a gate that matches nothing reports nothing), and tuning a *checker* one way blinds the other. **After editing either, re-seed both directions: a planted defect must still be caught AND legitimate prose must still pass. A falling assertion count is the investigate signal.**
 
 [LEARN:process] **Verify the branch actually changed before committing.** A `git checkout -b` bundled with a hook-blocked command never ran; ten commits landed on `main`. **A blocked hook fails the WHOLE call — anything bundled with it silently did not happen. After any branch op, echo `git rev-parse --abbrev-ref HEAD` and read it.**
 
-[LEARN:governance] **Methodological content in the owner's own field ships only with the owner's CURRENT sign-off.** A skill was vetoed despite earlier commits recording sign-off: **a sign-off attaches to the content it reviewed, not to the surface's name** — after substantial edits or promotion into a public template it is void until renewed, however well the surface evals. Scope widened twice (2026-08-22/23): all prescriptive empirical-practice content, then causal methods generally. Taxonomy and conditional package pointers ship; prescriptions do not. Dated rulings: [`meta-governance.md`](.claude/rules/meta-governance.md).
+[LEARN:governance] **Methodological content in the owner's own field ships only with the owner's CURRENT sign-off.** A skill was vetoed despite earlier commits recording sign-off: **a sign-off attaches to the content it reviewed, not to the surface's name** — after substantial edits or promotion into a public template it is void until renewed, however well the surface evals. Scope widened twice (2026-08-22/23): all prescriptive empirical-practice content, then causal methods generally. Taxonomy and conditional package pointers ship; prescriptions do not. Dated rulings: [`meta-governance.md`](.agents/rules/meta-governance.md).
 
 ## v2.5.1 Cycle Lessons (2026-08-23)
 
 [LEARN:audit] **Gate every number you publish — including in the release that adds the rule.** A release stating *a count is a computation, not a reading* shipped three counts of its own test battery: one agent wrote the prose while another was still adding cases. **Sequence the change and its count — never parallelize them — and make the count derived**, so a checker recomputing it from source turns silent drift into a red gate.
 
 [LEARN:safety] **When a check keeps leaking, stop patching cases — stop predicting.** A clean-tree guard tried to infer from a chained command whether the tree would still be dirty by the merge. Enumerating safe forms leaked; deny-on-doubt leaked less but still leaked, because each round found one more unmodelled dimension — flags, subcommands, segments, redirection, substitution — then a semantic one: `git stash` does not stash untracked files, so a correctly-parsed *this cleans the tree* was false. Deleting the prediction was necessary and not sufficient: a reading taken before execution proves only that the tree was clean when the command was *authorized*, and a referee chained a write ahead of the op on a clean tree. The class closed only once the op was also required to be a **standalone simple command** — nothing left on the line that could write in between. **Predicting an effect you could measure is itself the defect — and a measurement taken before the effect is not a measurement of it.**
+

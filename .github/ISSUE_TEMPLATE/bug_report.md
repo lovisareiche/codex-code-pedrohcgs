@@ -22,7 +22,7 @@ labels: bug
 ## Environment
 
 - **OS:** macOS / Linux / Windows
-- **Claude Code version:** `claude --version`
+- **Codex version:** `claude --version`
 - **Quarto version:** `quarto --version` (if relevant)
 - **XeLaTeX version:** `xelatex --version | head -1` (if relevant)
 - **Template version/commit:** `git log --oneline -1` or `git describe --tags`
@@ -40,3 +40,4 @@ labels: bug
 - [ ] `./scripts/validate-setup.sh` exits cleanly
 - [ ] The bug is in the **template** (not in your fork's customizations)
 - [ ] The bug is reproducible from a clean clone
+

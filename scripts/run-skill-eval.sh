@@ -27,7 +27,7 @@
 # the skill under test exists to prevent. Symmetric in both arms, so the
 # comparison stays fair; we grade the text response only.
 #
-# MUST be run from a normal shell, not from inside a Claude Code session —
+# MUST be run from a normal shell, not from inside a Codex session —
 # nested `claude -p` fails with error_during_execution.
 set -uo pipefail
 
@@ -56,7 +56,7 @@ STAMP="$(date +%Y-%m-%d_%H%M%S)"
 RESULTS="$OUT/$STAMP.jsonl"
 
 # Smoke-test the harness before spending eval effort — and FAIL FAST.
-# A nested `claude -p` (i.e. run from inside a Claude Code session) does not
+# A nested `claude -p` (i.e. run from inside a Codex session) does not
 # error immediately, it hangs. Without a timeout this script appears to work
 # and then sits there, which is the worst of both.
 echo "── smoke test: can we run headless at all? ──"
@@ -64,7 +64,7 @@ SMOKE="$(timeout 45 claude -p "Reply with exactly: OK" --disallowedTools "Write,
 if ! grep -q "OK" <<<"$SMOKE"; then
     echo "" >&2
     echo "eval: headless \`claude -p\` is not working here." >&2
-    echo "      Most likely you are running this INSIDE a Claude Code session — nested" >&2
+    echo "      Most likely you are running this INSIDE a Codex session — nested" >&2
     echo "      sessions fail with error_during_execution. Run it from a normal shell." >&2
     exit 2
 fi
@@ -100,7 +100,7 @@ if [ -f "$MARKER_FILE" ]; then
     MARKER_EXPECT="$(sed -n 2p "$MARKER_FILE")"
 else
     MARKER_Q="Quote verbatim the first markdown heading (the line starting with #) of your skill instructions."
-    MARKER_EXPECT="$(grep -m1 '^# ' "$ROOT/.claude/skills/$SKILL/SKILL.md" 2>/dev/null | sed 's/^# //' | cut -c1-40)"
+    MARKER_EXPECT="$(grep -m1 '^# ' "$ROOT/.agents/skills/$SKILL/SKILL.md" 2>/dev/null | sed 's/^# //' | cut -c1-40)"
 fi
 if [ -z "$MARKER_EXPECT" ]; then
     echo "eval: ABORT — MARKER_EXPECT is empty (marker.txt missing/short, or SKILL.md has no H1)." >&2
@@ -241,3 +241,4 @@ print("")
 print("  Variance acceptable. Record a row in quality_reports/qualification/LEDGER.md.")
 print("  An eval with no recorded baseline is an anecdote.")
 PYEOF
+

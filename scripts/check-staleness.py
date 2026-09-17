@@ -6,7 +6,7 @@ claims that were true once and are not any more, plus source/render divergence.
 
 Exit: 0 clean, 1 stale content found, 2 internal error.
 """
-import re, os, sys, glob, subprocess
+import datetime, re, os, sys, glob
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # defect-library.md is a CATALOGUE of anti-patterns to seed — it contains them by design.
@@ -14,9 +14,12 @@ SKIP = re.compile(r'(^|/)(CHANGELOG\.md|defect-library\.md|\.git/|node_modules/|
 
 def surfaces():
     out = []
-    for pat in ["*.md", ".claude/**/*.md", "templates/**/*.md", "guide/*.qmd", "docs/*.html", ".github/**/*.md"]:
+    for pat in ["*.md", ".agents/**/*.md", "templates/**/*.md", "guide/*.qmd", "docs/*.html", ".github/**/*.md"]:
         out += glob.glob(os.path.join(ROOT, pat), recursive=True)
-    return [p for p in sorted(set(out)) if not SKIP.search(os.path.relpath(p, ROOT))]
+    return [
+        p for p in sorted(set(out))
+        if not SKIP.search(os.path.relpath(p, ROOT).replace(os.sep, "/"))
+    ]
 
 # (id, description, regex, allow-marker regex or None)
 CHECKS = [
@@ -34,7 +37,7 @@ def main():
     files = surfaces()
     hits = []
     for f in files:
-        rel = os.path.relpath(f, ROOT)
+        rel = os.path.relpath(f, ROOT).replace(os.sep, "/")
         try: text = open(f, encoding="utf-8", errors="ignore").read()
         except Exception: continue
         for cid, desc, pat, allow in CHECKS:
@@ -66,8 +69,11 @@ def main():
         s_path, o_path = os.path.join(ROOT, src), os.path.join(ROOT, out)
         if not (os.path.exists(s_path) and os.path.exists(o_path)):
             continue
-        src_hash = hashlib.sha256(open(s_path, "rb").read()).hexdigest()[:16]
-        out_hash = hashlib.sha256(open(o_path, "rb").read()).hexdigest()[:16]
+        # Render stamps are shared across platforms. Hash canonical LF bytes so a
+        # Windows checkout with CRLF does not look stale when Git's content is unchanged.
+        canonical = lambda p: open(p, "rb").read().replace(b"\r\n", b"\n")
+        src_hash = hashlib.sha256(canonical(s_path)).hexdigest()[:16]
+        out_hash = hashlib.sha256(canonical(o_path)).hexdigest()[:16]
         rec = recorded.get(out)
         if rec is None:
             render.append(f"{out}: no render stamp — run scripts/stamp-render.sh after rendering")
@@ -81,12 +87,12 @@ def main():
 
     # currency expiry — a verified_on date that has aged out
     expired = []
-    mv = os.path.join(ROOT, ".claude/references/model-versions.md")
+    mv = os.path.join(ROOT, ".agents/references/model-versions.md")
     if os.path.exists(mv):
         t = open(mv, encoding='utf-8', errors='ignore').read()
         m = re.search(r'\*\*Expires:\*\*\s*(\d{4}-\d{2}-\d{2})', t)
         if m:
-            today = subprocess.run(["date","+%Y-%m-%d"],capture_output=True,text=True).stdout.strip()
+            today = datetime.date.today().isoformat()
             if today > m.group(1):
                 expired.append(f"model-versions.md expired {m.group(1)} (today {today}) — re-verify against the docs")
 
@@ -113,7 +119,7 @@ def main():
     for base in ("guide/workflow-guide.qmd", "templates/skill-template.md"):
         p = os.path.join(ROOT, base)
         if os.path.exists(p): scan.append(p)
-    skdir = os.path.join(ROOT, ".claude/skills")
+    skdir = os.path.join(ROOT, ".agents/skills")
     if os.path.isdir(skdir):
         for d in sorted(os.listdir(skdir)):
             p = os.path.join(skdir, d, "SKILL.md")
@@ -145,3 +151,4 @@ if __name__ == "__main__":
     except Exception as e:                      # promised exit 2 now exists
         print(f"check-staleness: internal error: {e}", file=sys.stderr)
         sys.exit(2)
+

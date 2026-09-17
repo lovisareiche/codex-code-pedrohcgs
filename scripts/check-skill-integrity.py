@@ -19,7 +19,7 @@ Checks:
   5. Rule-keyword REGISTRY completeness — check 4 only sees rules that
      someone remembered to register, so a skill-scoped rule missing from
      RULE_KEYWORDS is passed by omission. Any rule scoping itself to
-     `.claude/skills/` must be registered, with keywords or with an
+     `.agents/skills/` must be registered, with keywords or with an
      explicit `[]` and the reason it is not keyword-checkable.
 
 Exit codes:
@@ -123,7 +123,7 @@ TOOL_INVOCATION_PATTERNS = {
     # (see PR #92 — 4 skills each promised to spawn claim-verifier via Task
     # but forgot to declare Task in allowed-tools).
     # NOTE (2026-08-21): the subagent-spawning tool is `Agent`. `Task` is retained
-    # as a legacy alias so forks on older Claude Code keep passing; `TaskCreate`/
+    # as a legacy alias so forks on older Codex keep passing; `TaskCreate`/
     # `TaskGet`/... are the unrelated agent-teams task-list tools and are NOT this.
     "Agent": [
         r"\bvia\s+the\s+`?Agent`?\s+tool\b",
@@ -174,7 +174,7 @@ def tools_invoked_in_body(body: str) -> set[str]:
 def check_tool_parity() -> list[tuple[str, str, str]]:
     """Return list of (severity, file, msg)."""
     findings: list[tuple[str, str, str]] = []
-    for skill_md in sorted(REPO.glob(".claude/skills/*/SKILL.md")):
+    for skill_md in sorted(REPO.glob(".agents/skills/*/SKILL.md")):
         try:
             text = skill_md.read_text(encoding="utf-8")
         except (OSError, UnicodeError) as e:
@@ -247,7 +247,7 @@ def check_flag_parity() -> list[tuple[str, str, str]]:
     # documentation context (option-keywords) would double-fail many legit
     # skills that list flags only in a reference table without option verbs.
     any_code_flag_re = re.compile(r"`(--[a-z][a-z0-9-]*)`")
-    for skill_md in sorted(REPO.glob(".claude/skills/*/SKILL.md")):
+    for skill_md in sorted(REPO.glob(".agents/skills/*/SKILL.md")):
         try:
             text = skill_md.read_text(encoding="utf-8")
         except (OSError, UnicodeError) as e:
@@ -357,7 +357,7 @@ def check_anchor_resolution() -> list[tuple[str, str, str]]:
         REPO / "templates",
         REPO / "CHANGELOG.md",
         REPO / "README.md",
-        REPO / "CLAUDE.md",
+        REPO / "AGENTS.md",
         REPO / "MEMORY.md",
         REPO / "TROUBLESHOOTING.md",
     ]
@@ -426,7 +426,7 @@ RULE_KEYWORDS: dict[str, list[str]] = {
     # 59 of 60 skills for obeying the rule. Enforced instead by
     # check-model-versions.sh (the tier NAMES stay current) and by review.
     "model-routing.md": [],
-    # Add more as new rules ship that include `.claude/skills/*/SKILL.md`
+    # Add more as new rules ship that include `.agents/skills/*/SKILL.md`
     # in their paths: or globs: frontmatter — check 5 below FAILS if you
     # forget, so this registry can no longer go green by omission.
 }
@@ -440,7 +440,7 @@ def check_rule_skill_parity() -> list[tuple[str, str, str]]:
     keywords. Dead entries (scope targets non-skill files) yield nothing.
     """
     findings: list[tuple[str, str, str]] = []
-    for rule_md in sorted(REPO.glob(".claude/rules/*.md")):
+    for rule_md in sorted(REPO.glob(".agents/rules/*.md")):
         rule_name = rule_md.name
         keywords = RULE_KEYWORDS.get(rule_name)
         if keywords is None or not keywords:
@@ -457,7 +457,7 @@ def check_rule_skill_parity() -> list[tuple[str, str, str]]:
         for pattern in scope:
             if not isinstance(pattern, str):
                 continue
-            if ".claude/skills/" not in pattern:
+            if ".agents/skills/" not in pattern:
                 continue
             for skill_md in REPO.glob(pattern):
                 try:
@@ -477,7 +477,7 @@ def check_rule_skill_parity() -> list[tuple[str, str, str]]:
 # ---- Check 5: the registry above is COMPLETE ---------------------------------
 #
 # Check 4 only looks at rules that already have a RULE_KEYWORDS entry, so a rule
-# shipped with `.claude/skills/**/SKILL.md` in its `paths:` and no entry here is
+# shipped with `.agents/skills/**/SKILL.md` in its `paths:` and no entry here is
 # passed by OMISSION — the loudest possible way for a rule-vs-implementation gate
 # to be green while nothing is checked. That is what happened to
 # review-fencing.md in v2.5.1: it claimed all 60 SKILL.md files, was implemented by
@@ -489,10 +489,10 @@ def check_rule_skill_parity() -> list[tuple[str, str, str]]:
 
 
 def check_rule_registry_completeness() -> list[tuple[str, str, str]]:
-    """Every rule whose `paths:`/`globs:` scope targets `.claude/skills/`
+    """Every rule whose `paths:`/`globs:` scope targets `.agents/skills/`
     must be registered in RULE_KEYWORDS (possibly as an explicit skip)."""
     findings: list[tuple[str, str, str]] = []
-    for rule_md in sorted(REPO.glob(".claude/rules/*.md")):
+    for rule_md in sorted(REPO.glob(".agents/rules/*.md")):
         if rule_md.name in RULE_KEYWORDS:
             continue
         try:
@@ -508,11 +508,11 @@ def check_rule_registry_completeness() -> list[tuple[str, str, str]]:
         scope = (fm.get("paths") or []) + (fm.get("globs") or [])
         if not isinstance(scope, list):
             continue
-        if any(isinstance(p, str) and ".claude/skills/" in p for p in scope):
+        if any(isinstance(p, str) and ".agents/skills/" in p for p in scope):
             findings.append((
                 "P0",
                 rule_md.relative_to(REPO).as_posix(),
-                "rule scopes itself to .claude/skills/ files but has no "
+                "rule scopes itself to .agents/skills/ files but has no "
                 "RULE_KEYWORDS entry in scripts/check-skill-integrity.py — "
                 "check 4 would pass it by omission. Add the protocol keywords "
                 "a conforming SKILL.md must contain, or an explicit [] with "
@@ -570,3 +570,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+

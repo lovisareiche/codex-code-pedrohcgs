@@ -1,55 +1,57 @@
-# My Claude Code Setup
+# My Codex Setup
+
+> **Codex port:** Start with [CODEX_MIGRATION.md](CODEX_MIGRATION.md) for the compatibility map. [AGENTS.md](AGENTS.md), `.agents/skills/`, and `.codex/agents/` are the authoritative runtime surfaces; remaining upstream terminology is retained only where noted for provenance.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Changelog](https://img.shields.io/badge/See-CHANGELOG-blue.svg)](CHANGELOG.md)
 [![Contributing](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](.github/CONTRIBUTING.md)
 
-> **Actively maintained.** A summary of how I use Claude Code for academic work — slides, papers, data analysis, and more — packaged so you can fork it for your own research. See [CHANGELOG.md](CHANGELOG.md) for the latest changes.
+> **Actively maintained.** A summary of how I use Codex for academic work — slides, papers, data analysis, and more — packaged so you can fork it for your own research. See [CHANGELOG.md](CHANGELOG.md) for the latest changes.
 
 **Live site:** [psantanna.com/claude-code-my-workflow](https://psantanna.com/claude-code-my-workflow/)
 
-A ready-to-fork foundation for AI-assisted academic work. You describe what you want — lecture slides, a research paper, a data analysis, a replication package — and Claude plans the approach, runs specialized agents, fixes issues, verifies quality, and presents results. Like a contractor who handles the entire job. Extracted from a production PhD course and extended by a growing [community](#community--extensions).
+A ready-to-fork foundation for AI-assisted academic work. You describe what you want — lecture slides, a research paper, a data analysis, a replication package — and Codex plans the approach, runs specialized agents, fixes issues, verifies quality, and presents results. Like a contractor who handles the entire job. Extracted from a production PhD course and extended by a growing [community](#community--extensions).
 
 ---
 
 ## Quick Start (5–10 minutes, plus ~30 min for first-time installs)
 
-> **Before you start:** Claude Code + git are the minimum. To run the included `HelloWorld` demos end-to-end you also need XeLaTeX (Beamer sample) and Quarto (Quarto sample). R and the GitHub CLI are recommended. Python 3 runs the gate suite (`./scripts/backtest.sh` — 10 checkers) and the quality scorer, and is pre-installed on macOS/Linux. Full list in [Prerequisites](#prerequisites) below. Fastest path: clone first, then run `./scripts/validate-setup.sh` — it reports exactly what's missing with install links.
+> **Before you start:** Codex + git are the minimum. To run the included `HelloWorld` demos end-to-end you also need XeLaTeX (Beamer sample) and Quarto (Quarto sample). R and the GitHub CLI are recommended. Python 3 runs the gate suite (`./scripts/backtest.sh` — 10 checkers) and the quality scorer, and is pre-installed on macOS/Linux. Full list in [Prerequisites](#prerequisites) below. Fastest path: clone first, then run `./scripts/validate-setup.sh` — it reports exactly what's missing with install links.
 >
 > **Only need Python/R/markdown?** You don't need XeLaTeX or Quarto. The agents, rules, skills, and orchestration patterns work for any text/code artifact. Skip the `HelloWorld` demos and head straight to `/data-analysis`, `/review-paper`, `/lit-review`, or `/review-r`.
 >
-> **Session 2 onwards:** [MEMORY.md](MEMORY.md) (committed) collects generic `[LEARN]` entries that help all forkers; machine-specific notes accumulate in Claude Code's native auto memory (`~/.claude/projects/<project>/memory/`, machine-local, never committed). See [`.claude/rules/meta-governance.md`](.claude/rules/meta-governance.md) for the distinction.
+> **Session 2 onwards:** [MEMORY.md](MEMORY.md) (committed) collects generic `[LEARN]` entries that help all forkers; machine-specific notes accumulate in Codex's native auto memory (`~/.agents/projects/<project>/memory/`, machine-local, never committed). See [`.agents/rules/meta-governance.md`](.agents/rules/meta-governance.md) for the distinction.
 
 ### 1. Fork & Clone
 
 ```bash
 # Fork this repo on GitHub (click "Fork" on the repo page), then:
-git clone https://github.com/YOUR_USERNAME/claude-code-my-workflow.git my-project
+git clone https://github.com/YOUR_USERNAME/codex-code-pedrohcgs.git my-project
 cd my-project
 ./scripts/validate-setup.sh        # reports missing tools with install links
 ```
 
 Replace `YOUR_USERNAME` with your GitHub username.
 
-### 2. Start Claude Code and Paste This Prompt
+### 2. Start Codex and Paste This Prompt
 
 ```bash
-claude
+codex
 ```
 
-**Using VS Code?** Open the Claude Code panel instead. Everything works the same — see the [full guide](https://psantanna.com/claude-code-my-workflow/workflow-guide.html#sec-setup) for details.
+**Using VS Code?** Open the Codex panel instead. Everything works the same — see the [full guide](https://psantanna.com/claude-code-my-workflow/workflow-guide.html#sec-setup) for details.
 
-> **Avoid prompt fatigue.** New interactive sessions on Pro/Max/Team start in **auto mode** (classifier-gated — most actions run, risky ones prompt); on plans and providers without auto, Normal mode prompts per risky tool call. If you still see too many prompts, toggle **Auto-accept edits** mode (a keybinding; see the [permission modes section](https://psantanna.com/claude-code-my-workflow/workflow-guide.html#settings---permissions-and-hooks) of the guide) or run `claude --permission-mode acceptEdits`. For fully-autonomous runs on a trusted repo, **Bypass** mode skips prompts entirely. The template's `.claude/settings.json` ships `defaultMode: bypassPermissions` with broad catch-all allows (`Bash(*)`, `Edit(**)`, `Write(**)` — 7 wildcard rules, not a curated list), so out of the box almost nothing prompts. That is a deliberate power-user default: to tighten it, set `defaultMode: "default"` in `.claude/settings.json` and approve tools as you go, or remove the override to fall back to the platform's auto mode.
+> **Permissions:** Select the appropriate permission mode in the Codex app or CLI for each task. This repository does not override Codex permissions or ship a bypass-permissions configuration.
 
 Then paste the [starter prompt](https://psantanna.com/claude-code-my-workflow/workflow-guide.html#sec-first-session) from the guide, filling in your project details:
 
-> I am starting to work on **[PROJECT NAME]** in this repo. **[Describe your project in 2–3 sentences.]** I've set up the Claude Code academic workflow... Please read the configuration files and adapt them for my project. Enter plan mode and start.
+> I am starting to work on **[PROJECT NAME]** in this repo. **[Describe your project in 2–3 sentences.]** I've set up the Codex academic workflow... Please read the configuration files and adapt them for my project. Enter plan mode and start.
 
 The [full guide](https://psantanna.com/claude-code-my-workflow/workflow-guide.html#sec-first-session) has the complete starter prompt with all the details.
 
-**What this does:** Claude reads all the configuration files, fills in your project name, institution, and preferences, then enters contractor mode — planning, implementing, and (within the skill you invoke) running the review + verify loop. You approve the plan, invoke a skill, and the skill handles the rest within its scope.
+**What this does:** Codex reads the project configuration, fills in your project name, institution, and preferences, then enters contractor mode — planning, implementing, and (within the skill you invoke) running the review + verify loop. You approve the plan, invoke a skill, and the skill handles the rest within its scope.
 
-> **Heavily adapting CLAUDE.md for a non-academic project?** Anthropic's built-in `/init` command will re-derive a `CLAUDE.md` from your codebase as a starting point. The pre-shipped CLAUDE.md in this template already covers the academic setup — you only need `/init` if your fork diverges substantially (e.g., a Python/ML project that doesn't use LaTeX or Quarto).
+> **Heavily adapting AGENTS.md for a non-academic project?** Rework the repository-level instructions around the actual tools and checks used by that project. The pre-shipped AGENTS.md already covers the academic setup.
 
 ### 3. Verify Your Setup
 
@@ -59,7 +61,7 @@ Before building real lectures, confirm your environment works:
 ./scripts/validate-setup.sh        # Checks XeLaTeX, Quarto, Python, git, etc.
 ```
 
-Then inside Claude:
+Then inside Codex:
 
 ```text
 /compile-latex HelloWorld          # Compiles Slides/HelloWorld.tex to PDF
@@ -76,16 +78,16 @@ If both succeed, delete `Slides/HelloWorld.tex` and `Quarto/HelloWorld.qmd` and 
 
 You don't craft a perfect prompt — you **state a goal and let the work loop toward it under gates**. Specialist agents do the labor; enforcing gates decide when it's good enough; you adjudicate the disagreements they surface. Three things make that trustworthy:
 
-- **Real gates, not reminders.** One command — `./scripts/backtest.sh` — runs **ten gates**: surface-sync, skill integrity, model currency against the SSoT, link and anchor resolution, Agent Skills spec conformance, staleness (including source-vs-published divergence), repo hygiene, derived counts (enumerable claims re-counted from disk), ledger coverage (the qualification ledger and the checks that actually run must agree in both directions, and every hook declared in settings must exist and be invocable — a one-character path typo no longer disables a hook in silence), and a seeded hook battery (every active guard hook is re-fired against the failure it targets, alongside clean controls, on every run). A version-controlled pre-commit hook (run `./scripts/install-hooks.sh` once) runs it plus the quality check (≥80) on *every* commit — bypassing the skill no longer bypasses the review. A `git-guardrails` hook blocks destructive git (`reset --hard`, `clean -f`, `push --force`, `add -A`) and refuses a merge, rebase, or pull while the tree is dirty — reading the tree as it is rather than predicting what a chained command might do to it, so `git stash && git merge` is denied too and you run the two steps separately (`ALLOW_DIRTY_MERGE=1` if you mean it); like its sibling it is a textual check over the command line, so an op carried inside an interpreter, an alias, or a script is outside what it can see, and its docstring says which forms those are. Its sibling `root-of-trust-guard` denies the common shell write paths into the files that define the gates themselves (`.claude/settings*.json`, `.claude/hooks/`, `.githooks/`) — redirection, `tee`, `cp`/`mv`/`rm`, in-place `sed` — and, because it already unwraps `bash -c` and `env -S` payloads for those rules, it hands the unwrapped payload to the *same* destructive-git deny list, so `bash -c 'git reset --hard'` and `bash -c 'git clean -fdx'` no longer fall between the two hooks. **Read that one as a tripwire, not a lock, and read the name as a filename rather than a claim:** it is a best-effort textual scan that fails open on its own errors, and the files it watches stay replaceable through channels the template deliberately allows — an `Edit`/`Write`/`MultiEdit`, a branch switch, a clean merge, or a bug in the hook itself. What it buys is a change of *channel* — a change to a gate arrives as a reviewable diff instead of an invisible overwrite — not a guarantee that the gates cannot be disabled. Nothing here recovers anything either: the transcript and `git reflog` are an audit trail and a commit-history aid, and neither holds the bytes of an uncommitted edit or an untracked file. The review runtime re-checks any reviewer-introduced "fatal" finding before it counts.
-- **Every gate is qualified, and the ledger is itself a gate.** Each one has been shown a planted defect and confirmed to go red, with recall and false-alarm rate recorded in [`quality_reports/qualification/LEDGER.md`](quality_reports/qualification/LEDGER.md) — and that ledger is now load-bearing rather than aspirational: a registered check with no row there fails the build, and a row naming a checker that no longer exists fails too. Checks that have *not* been qualified are listed there by name as visible debt — because an unqualified check is not weak evidence, it is none. Run [`/vaccinate`](.claude/skills/vaccinate/SKILL.md) to qualify one.
-- **A real orchestration runtime.** Reviews fan out to forked specialist agents, reduce over a shared finding schema, judge with a hallucination gate, and loop until dry — see [`orchestrator-protocol.md`](.claude/rules/orchestrator-protocol.md).
+- **Real gates, not reminders.** One command — `./scripts/backtest.sh` — runs **ten gates**: surface-sync, skill integrity, model currency against the SSoT, link and anchor resolution, Agent Skills spec conformance, staleness (including source-vs-published divergence), repo hygiene, derived counts (enumerable claims re-counted from disk), ledger coverage (the qualification ledger and the checks that actually run must agree in both directions, and every hook declared in settings must exist and be invocable — a one-character path typo no longer disables a hook in silence), and a seeded hook battery (every active guard hook is re-fired against the failure it targets, alongside clean controls, on every run). A version-controlled pre-commit hook (run `./scripts/install-hooks.sh` once) runs it plus the quality check (≥80) on *every* commit — bypassing the skill no longer bypasses the review. A `git-guardrails` hook blocks destructive git (`reset --hard`, `clean -f`, `push --force`, `add -A`) and refuses a merge, rebase, or pull while the tree is dirty — reading the tree as it is rather than predicting what a chained command might do to it, so `git stash && git merge` is denied too and you run the two steps separately (`ALLOW_DIRTY_MERGE=1` if you mean it); like its sibling it is a textual check over the command line, so an op carried inside an interpreter, an alias, or a script is outside what it can see, and its docstring says which forms those are. Its sibling `root-of-trust-guard` denies the common shell write paths into the files that define the gates themselves (`.agents/settings*.json`, `.agents/hooks/`, `.githooks/`) — redirection, `tee`, `cp`/`mv`/`rm`, in-place `sed` — and, because it already unwraps `bash -c` and `env -S` payloads for those rules, it hands the unwrapped payload to the *same* destructive-git deny list, so `bash -c 'git reset --hard'` and `bash -c 'git clean -fdx'` no longer fall between the two hooks. **Read that one as a tripwire, not a lock, and read the name as a filename rather than a claim:** it is a best-effort textual scan that fails open on its own errors, and the files it watches stay replaceable through channels the template deliberately allows — an `Edit`/`Write`/`MultiEdit`, a branch switch, a clean merge, or a bug in the hook itself. What it buys is a change of *channel* — a change to a gate arrives as a reviewable diff instead of an invisible overwrite — not a guarantee that the gates cannot be disabled. Nothing here recovers anything either: the transcript and `git reflog` are an audit trail and a commit-history aid, and neither holds the bytes of an uncommitted edit or an untracked file. The review runtime re-checks any reviewer-introduced "fatal" finding before it counts.
+- **Every gate is qualified, and the ledger is itself a gate.** Each one has been shown a planted defect and confirmed to go red, with recall and false-alarm rate recorded in [`quality_reports/qualification/LEDGER.md`](quality_reports/qualification/LEDGER.md) — and that ledger is now load-bearing rather than aspirational: a registered check with no row there fails the build, and a row naming a checker that no longer exists fails too. Checks that have *not* been qualified are listed there by name as visible debt — because an unqualified check is not weak evidence, it is none. Run [`/vaccinate`](.agents/skills/vaccinate/SKILL.md) to qualify one.
+- **A real orchestration runtime.** Reviews fan out to forked specialist agents, reduce over a shared finding schema, judge with a hallucination gate, and loop until dry — see [`orchestrator-protocol.md`](.agents/rules/orchestrator-protocol.md).
 - **Ground truth as a process.** A mismatch isn't always a failure: a defensible, *named* alternative is recorded as `EXPLAINED` and carried into your response-to-referees, while genuine errors stay fail-closed.
 
-This is **not** an autonomous daemon — the loop is always you- or skill-initiated, and you stay the auditor. Scheduled automation handles recurring chores and notifies only on findings — cloud [Routines](.claude/references/scheduled-routines.md) for committed-repo checks (weekly lit-delta, inbox triage), Desktop scheduled tasks for anything touching local data (the nightly reproducibility check's home).
+This is **not** an autonomous daemon — the loop is always you- or skill-initiated, and you stay the auditor. Scheduled automation handles recurring chores and notifies only on findings — cloud [Routines](.agents/references/scheduled-routines.md) for committed-repo checks (weekly lit-delta, inbox triage), Desktop scheduled tasks for anything touching local data (the nightly reproducibility check's home).
 
 ### Contractor Mode
 
-You describe a task. For complex or ambiguous requests, Claude first creates a requirements specification with MUST/SHOULD/MAY priorities and clarity status (CLEAR/ASSUMED/BLOCKED). You approve the spec, then Claude plans the approach and invokes the right skill (e.g. `/create-lecture`, `/qa-quarto`, `/review-paper --adversarial`). That skill implements the orchestrator runtime internally — implement, verify, review, fix, re-verify, score — and returns a summary when the work meets quality standards. Say "just do it" and it runs the full loop; commits still require an explicit `/commit` (which the pre-commit hook then gates).
+You describe a task. For complex or ambiguous requests, Codex first creates a requirements specification with MUST/SHOULD/MAY priorities and clarity status (CLEAR/ASSUMED/BLOCKED). You approve the spec, then Codex plans the approach and invokes the right skill (e.g. `$create-lecture`, `$qa-quarto`, `$review-paper --adversarial`). That skill implements the orchestrator runtime internally — implement, verify, review, fix, re-verify, score — and returns a summary when the work meets quality standards. Say "just do it" and it runs the full loop; commits still require explicit commit intent.
 
 ### Specialized Agents
 
@@ -139,17 +141,17 @@ It covers:
 1. **Why This Workflow Exists** — the problem and the vision
 2. **Getting Started** — fork, paste one prompt, and Claude sets up the rest
 3. **The System in Action** — specialized agents, adversarial QA, quality scoring
-4. **The Building Blocks** — CLAUDE.md, rules, skills, agents, hooks, memory
+4. **The Building Blocks** — AGENTS.md, rules, skills, agents, hooks, memory
 5. **Workflow Patterns** — slides, research, reproducibility, presentation rhetoric, sequential adversarial audits, and more
 6. **The Ecosystem** — extensions by clo-author, claudeblattman, MixtapeTools, autoresearch, ClaudeCodeTools, and a growing community
 7. **Customizing for Your Domain** — creating your own reviewers and knowledge bases
 
 ### 2026 Features
 
-The guide covers Claude Code's latest capabilities:
+The guide covers Codex's latest capabilities:
 
-- **Model lineup** — **Fable 5** (`claude-fable-5`, opt-in via `/model fable` or the `best` alias) is the top tier for long-horizon work. Current Opus/Sonnet point versions and the **provider-dependent alias table** live in the single source of truth, [`model-versions.md`](.claude/references/model-versions.md) — surfaces here stay tier-abstract so they cannot go stale, and the staleness gate fails the build when the SSoT's own expiry passes.
-- **Effort levels** — `/effort` sets cost vs. thoroughness (`low` / `medium` / `high` / `xhigh` / `max`). **Fable 5 defaults to `high`** (per the [model SSoT](.claude/references/model-versions.md)); set effort explicitly on other tiers — reserve `xhigh` for extended exploration and `ultracode` (xhigh + dynamic workflows) for the largest autonomous runs.
+- **Model lineup** — **Fable 5** (`claude-fable-5`, opt-in via `/model fable` or the `best` alias) is the top tier for long-horizon work. Current Opus/Sonnet point versions and the **provider-dependent alias table** live in the single source of truth, [`model-versions.md`](.agents/references/model-versions.md) — surfaces here stay tier-abstract so they cannot go stale, and the staleness gate fails the build when the SSoT's own expiry passes.
+- **Effort levels** — `/effort` sets cost vs. thoroughness (`low` / `medium` / `high` / `xhigh` / `max`). **Fable 5 defaults to `high`** (per the [model SSoT](.agents/references/model-versions.md)); set effort explicitly on other tiers — reserve `xhigh` for extended exploration and `ultracode` (xhigh + dynamic workflows) for the largest autonomous runs.
 - **`/goal <verifiable condition>`** (v1.9.0; Anthropic May 2026) — keep working across turns until a fast model confirms the condition holds. Pairs with `/commit` quality gates for verified-end-state runs.
 - **`claude agents` dashboard** (v1.9.0; Anthropic May 2026) — single screen for parallel review work (`/review-paper --peer`, `/slide-excellence`).
 - **Cost-Conscious Composition** — prompt-cache TTL (5-min default on API keys; **1-hour automatic on Claude subscriptions**), 70/20/10 model routing (Haiku/Sonnet/Opus), `/cost` + `/usage` monitoring, Agent SDK credit-pool split (2026-06-15).
@@ -182,7 +184,7 @@ The guide covers Claude Code's latest capabilities:
 
 ### One repo, many project types
 
-This workflow is designed as a **single hub for an entire research program** — not one paper at a time. The same `CLAUDE.md`, rules, agents, and quality gates serve courses and lectures, papers and referee reports, data analysis and replication packages, **Monte Carlo simulation studies** (`/simulation-study` + `sim-reviewer`), and the **R package release gate** (`/r-package-check` + `r-package-reviewer`) — all new in v1.10.0. *On the roadmap:* Stata / Python package checks (SSC / PyPI) and personal-productivity workflows. See [`.claude/references/v2.0-backlog.md`](.claude/references/v2.0-backlog.md) for what's next.
+This workflow is designed as a **single hub for an entire research program** — not one paper at a time. The same `AGENTS.md`, rules, agents, and quality gates serve courses and lectures, papers and referee reports, data analysis and replication packages, **Monte Carlo simulation studies** (`/simulation-study` + `sim-reviewer`), and the **R package release gate** (`/r-package-check` + `r-package-reviewer`) — all new in v1.10.0. *On the roadmap:* Stata / Python package checks (SSC / PyPI) and personal-productivity workflows. See [`.agents/references/v2.0-backlog.md`](.agents/references/v2.0-backlog.md) for what's next.
 
 ---
 
@@ -191,7 +193,7 @@ This workflow is designed as a **single hub for an entire research program** —
 <details>
 <summary><strong>18 agents, 60 skills, 37 rules, 8 hooks</strong> (click to expand)</summary>
 
-### Agents (`.claude/agents/`)
+### Agents (`.agents/agents/`)
 
 <!-- surface-sync-table: agents -->
 | Agent | What It Does |
@@ -215,7 +217,7 @@ This workflow is designed as a **single hub for an entire research program** —
 | `sim-reviewer` (v1.10.0) | Monte Carlo simulation reviewer — DGP/estimand match, Monte Carlo SE, coverage-vs-truth, claims↔tables parity |
 | `r-package-reviewer` (v1.10.0) | R package-source reviewer — DESCRIPTION/NAMESPACE hygiene, roxygen completeness, testthat coverage, CRAN-policy red flags |
 
-### Skills (`.claude/skills/`)
+### Skills (`.agents/skills/`)
 
 <!-- surface-sync-table: skills -->
 | Skill | What It Does |
@@ -235,7 +237,7 @@ This workflow is designed as a **single hub for an entire research program** —
 | `/blast-radius` | Before and after changing anything shared (return value, schema, default, units), enumerate every consumer and actually run them |
 | `/credible-claims` | Research brief before delegating, claim record after. Keeps faster execution from being mistaken for credible evidence |
 | `/differential-audit` | Compare two implementations — a port, a replication, a refactor, a version upgrade — so that agreement means something |
-| `/oracle-review` | Run an external frontier-model referee (Claude Code → GPT-5.6 Sol Pro) and adjudicate what comes back |
+| `/oracle-review` | Run an external frontier-model referee (Codex → GPT-5.6 Sol Pro) and adjudicate what comes back |
 | `/verify-artifact` | Prove the file you are about to send IS the thing you mean — rebuild, verify integrity, diff against source |
 | `/voice-profile` | Extract a written voice profile from your own prior papers, then audit drafts against it — the positive counterpart to `/humanize`, which only detects AI tells |
 | `/validate-bib` | Cross-reference citations against bibliography |
@@ -279,7 +281,7 @@ This workflow is designed as a **single hub for an entire research program** —
 | `/teach-from-paper` (v2.0) | Reads a paper end-to-end and pitches it to a stated audience level — lecture outline (motivation → setup → key result → method → takeaways), the 3-5 results worth presenting with intuition, a slide skeleton for `/create-lecture`, discussion questions, and a problem-set brief for `/scaffold-exercises` |
 | `/respond-to-eval` (v2.0) | Teaching analogue of `/respond-to-referees` — clusters course-eval comments into themes, weights by frequency (signal vs noise), classifies Keep / Change / Investigate / Out-of-scope, and drafts concrete changes mapped to the syllabus + slide decks; saves the plan to `quality_reports/teaching/` |
 | `/scaffold-exercises` (v2.0) | Scaffold a graded problem set across analytical/empirical/coding types, with worked solutions and "why this matters" explainers emitted to a separate solution key |
-| `/new-skill` (v2.0) | Scaffold a new skill that follows this repo's conventions — interviews for purpose, triggers, and tools, writes `.claude/skills/<name>/SKILL.md` from the template with frontmatter/body that pass `check-skill-integrity.py` first try, then reminds to add the surface-table rows |
+| `/new-skill` (v2.0) | Scaffold a new skill that follows this repo's conventions — interviews for purpose, triggers, and tools, writes `.agents/skills/<name>/SKILL.md` from the template with frontmatter/body that pass `check-skill-integrity.py` first try, then reminds to add the surface-table rows |
 
 ### Research Workflow
 
@@ -291,11 +293,11 @@ This workflow is designed as a **single hub for an entire research program** —
 | Enhanced session logging | Structured tables for changes, decisions, verification |
 | Merge-only reporting | Quality reports at merge time only |
 | Math line-length exception | Long lines acceptable for documented formulas |
-| Workflow quick reference | One-page cheat sheet at `.claude/WORKFLOW_QUICK_REF.md` |
+| Workflow quick reference | One-page cheat sheet at `.agents/WORKFLOW_QUICK_REF.md` |
 
-### Rules (`.claude/rules/`)
+### Rules (`.agents/rules/`)
 
-Rules use path-scoped loading: **always-on** rules load every session; **path-scoped** rules load only when Claude works on matching files. Adherence degrades as instruction files grow (official guidance: keep `CLAUDE.md` under ~200 lines), so less is more.
+Rules use path-scoped loading: **always-on** rules load every session; **path-scoped** rules load only when Claude works on matching files. Adherence degrades as instruction files grow (official guidance: keep `AGENTS.md` under ~200 lines), so less is more.
 
 **Always-on** (no `paths:` frontmatter — load every session):
 
@@ -336,8 +338,8 @@ Rules use path-scoped loading: **always-on** rules load every session; **path-sc
 | `cross-artifact-review` (v1.7.0) | `master_supporting_docs/`, `.tex`, `.qmd` | Paper ↔ code dependency graph; auto-invokes `/review-r` + `/audit-reproducibility` |
 | `post-flight-verification` (v1.7.0) | Skills generating factual claims | Chain-of-Verification protocol with forked verifier |
 | `summary-parity` (v1.8.x) | `CHANGELOG.md`, `README.md`, `.qmd`, skill/rule/agent `.md` | Anti-whack-a-mole: re-verify summaries against their bodies |
-| `model-routing` (v1.9.0) | `.claude/agents/**/*.md`, `.claude/skills/**/SKILL.md` | 70/20/10 architect/editor split (Haiku/Sonnet/Opus) |
-| `review-fencing` (v2.5.1) | `.claude/agents/**/*.md`, `.claude/skills/**/SKILL.md` | Reviewer independence is a property of the environment — neutral copy outside the checkout, prior verdicts excluded, own reading first, positive controls fenced from committed answer keys |
+| `model-routing` (v1.9.0) | `.agents/agents/**/*.md`, `.agents/skills/**/SKILL.md` | 70/20/10 architect/editor split (Haiku/Sonnet/Opus) |
+| `review-fencing` (v2.5.1) | `.agents/agents/**/*.md`, `.agents/skills/**/SKILL.md` | Reviewer independence is a property of the environment — neutral copy outside the checkout, prior verdicts excluded, own reading first, positive controls fenced from committed answer keys |
 | `stata-code-conventions` (v1.9.0) | `**/*.do`, `scripts/stata/**` | Stata header scaffold, numbered pipeline, esttab, clustering discipline, AEA compliance |
 | `simulation-conventions` (v1.10.0) | `**/*simulation*.R`, `**/*_sim.R`, `explorations/**` | Monte Carlo discipline: DGP/estimand, L'Ecuyer seeding, Monte Carlo SE, coverage-vs-truth, raw-result storage |
 | `r-package-conventions` (v1.10.0) | `R/**`, `tests/**`, `DESCRIPTION`, `NAMESPACE`, `man/**` | R package-source standards: no `library()` in `R/`, roxygen NAMESPACE, Imports/Suggests, testthat 3e, CRAN policy |
@@ -371,7 +373,7 @@ Rules use path-scoped loading: **always-on** rules load every session; **path-sc
 
 | Tool | Required For | Install |
 |------|-------------|---------|
-| [Claude Code](https://code.claude.com/docs/en/overview) | Everything | [claude.ai/install](https://claude.ai/install) |
+| [Codex](https://code.claude.com/docs/en/overview) | Everything | [claude.ai/install](https://claude.ai/install) |
 | git | Clone + version control | [git-scm.com](https://git-scm.com/downloads) |
 | Python 3 (3.9+) | Internal checkers (palette sync, TikZ prevention) | Preinstalled on macOS/Linux; [python.org](https://www.python.org/) for Windows |
 | XeLaTeX | LaTeX compilation (Beamer `HelloWorld`, real lectures) | [TeX Live](https://tug.org/texlive/) or [MacTeX](https://tug.org/mactex/) |
@@ -380,7 +382,7 @@ Rules use path-scoped loading: **always-on** rules load every session; **path-sc
 | pdf2svg | TikZ → SVG for Quarto (`/extract-tikz`) | `brew install pdf2svg` (macOS), `apt install pdf2svg` (Debian) |
 | [gh CLI](https://cli.github.com/) | PR / issue workflow | `brew install gh` (macOS), `apt install gh` (Debian) |
 
-**Minimum to fork this template:** Claude Code + git + Python 3 (Python is already installed on macOS/Linux).
+**Minimum to fork this template:** Codex + git + Python 3 (Python is already installed on macOS/Linux).
 
 **Minimum to run the included HelloWorld demos end-to-end:** add XeLaTeX (for `/compile-latex HelloWorld`) and Quarto (for `/deploy HelloWorld`).
 
@@ -390,26 +392,26 @@ Rules use path-scoped loading: **always-on** rules load every session; **path-sc
 
 ## Adapting for Your Field
 
-1. **Fill in the knowledge base** (`.claude/rules/knowledge-base-template.md`) with your notation, applications, and design principles
-2. **Customize the domain reviewer** (`.claude/agents/domain-reviewer.md`) with review lenses specific to your field
+1. **Fill in the knowledge base** (`.agents/rules/knowledge-base-template.md`) with your notation, applications, and design principles
+2. **Customize the domain reviewer** (`.agents/agents/domain-reviewer.md`) with review lenses specific to your field
 3. **Update the color palette** — this is a **two-surface contract**: change the HEX values at the top of **both** [`Preambles/header.tex`](Preambles/header.tex) (Beamer/TikZ) **and** [`Quarto/theme-template.scss`](Quarto/theme-template.scss) (Quarto slides) so they agree. Then run `./scripts/check-palette-sync.sh` to verify. Forgetting one surface silently produces mismatched Beamer vs. Quarto renderings. See [`Preambles/README.md`](Preambles/README.md) for the full contract and the TikZ style library.
-4. **Add field-specific R pitfalls** to `.claude/rules/r-code-conventions.md`
-5. **Fill in the lecture mapping** in `.claude/rules/beamer-quarto-sync.md`
-6. **Customize the workflow quick reference** (`.claude/WORKFLOW_QUICK_REF.md`) with your non-negotiables and preferences
+4. **Add field-specific R pitfalls** to `.agents/rules/r-code-conventions.md`
+5. **Fill in the lecture mapping** in `.agents/rules/beamer-quarto-sync.md`
+6. **Customize the workflow quick reference** (`.agents/WORKFLOW_QUICK_REF.md`) with your non-negotiables and preferences
 7. **Set up the exploration folder** (`explorations/`) for experimental work
 
 ---
 
 ## Additional Resources
 
-- [Claude Code Documentation](https://code.claude.com/docs/en/overview)
-- [Writing a Good CLAUDE.md](https://code.claude.com/docs/en/memory) — official guidance on project memory
+- [Codex Documentation](https://code.claude.com/docs/en/overview)
+- [Writing a Good AGENTS.md](https://code.claude.com/docs/en/memory) — official guidance on project memory
 
 ---
 
 ## Origin
 
-This infrastructure was extracted from **Econ 730: Causal Panel Data** at Emory University, developed by Pedro Sant'Anna using Claude Code over 6+ sessions. The course produced 6 complete PhD lecture decks with 800+ slides, interactive Quarto versions with plotly charts, and full R replication packages — all managed through this multi-agent workflow. The patterns are domain-agnostic: the same agents, rules, and orchestrator work for any academic project.
+This infrastructure was extracted from **Econ 730: Causal Panel Data** at Emory University, developed by Pedro Sant'Anna using Codex over 6+ sessions. The course produced 6 complete PhD lecture decks with 800+ slides, interactive Quarto versions with plotly charts, and full R replication packages — all managed through this multi-agent workflow. The patterns are domain-agnostic: the same agents, rules, and orchestrator work for any academic project.
 
 ---
 
@@ -440,3 +442,4 @@ See the [guide's ecosystem section](https://psantanna.com/claude-code-my-workflo
 ## License
 
 MIT License. See [LICENSE](LICENSE).
+

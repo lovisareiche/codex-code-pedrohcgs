@@ -1,5 +1,5 @@
 # ==============================================================================
-# .gitignore for Academic Claude Code Projects
+# .gitignore for Academic Codex Projects
 # ==============================================================================
 
 # LaTeX build artifacts
@@ -36,15 +36,9 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
-# Claude Code local files (not shared across machines)
-.claude/settings.local.json
-.claude/state/
-CLAUDE.local.md
-
 # IDE
-# .vscode/settings.json ships in the template (carries shipped Claude Code permission-mode
-# recommendations — see TROUBLESHOOTING.md "Permissions / bypass / statusline" for the typo
-# fix forkers need). Other .vscode/ content is developer-machine-specific.
+# .vscode/settings.json ships as an empty project placeholder. Codex permissions
+# are selected in the app or CLI and are not stored in this repository.
 .vscode/*
 !.vscode/settings.json
 .idea/

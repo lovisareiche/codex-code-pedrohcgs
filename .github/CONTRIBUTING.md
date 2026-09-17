@@ -8,7 +8,7 @@ This repository is a **template** designed for academic researchers to fork and 
 - **New skills/agents/rules** that generalize across academic domains (economics, biology, physics, CS, etc.).
 - **Documentation improvements** — guide, README, examples, troubleshooting.
 - **Pedagogical improvements** — clearer onboarding, better Day 1 experience.
-- **2026+ Claude Code feature integration** — when new hooks, frontmatter fields, or capabilities ship.
+- **2026+ Codex feature integration** — when new hooks, frontmatter fields, or capabilities ship.
 
 ## What belongs in your fork (not here)
 
@@ -20,7 +20,7 @@ This repository is a **template** designed for academic researchers to fork and 
 ## Before you open a PR
 
 1. **Open an issue first** for new features or non-trivial changes. We may already be working on it or have a different design in mind.
-2. **Read [CLAUDE.md](../CLAUDE.md) and the [guide](https://psantanna.com/claude-code-my-workflow/workflow-guide.html)** so your contribution fits the existing patterns.
+2. **Read [AGENTS.md](../AGENTS.md) and the [guide](https://psantanna.com/claude-code-my-workflow/workflow-guide.html)** so your contribution fits the existing patterns.
 3. **Run the validate script** to confirm you don't break the onboarding path:
    ```bash
    ./scripts/validate-setup.sh
@@ -37,7 +37,7 @@ This repository is a **template** designed for academic researchers to fork and 
 
 - **Branch naming**: `feat/short-name`, `fix/short-name`, `chore/short-name`, `docs/short-name`.
 - **Commit messages**: imperative mood ("add", "fix", "refactor"), explain *why* in the body.
-- **Co-author Claude** if Claude Code helped: `Co-Authored-By: Claude <noreply@anthropic.com>` (version-free — model names drift).
+- **Co-author Claude** if Codex helped: `Co-Authored-By: Claude <noreply@anthropic.com>` (version-free — model names drift).
 - **Use the PR template** (auto-loaded when you open a PR).
 - **Squash before merging** if your branch has many WIP commits.
 
@@ -58,3 +58,4 @@ Be kind. Academic work is hard enough without rude reviews. If you disagree with
 ## Questions?
 
 Open an issue with the `question` label.
+

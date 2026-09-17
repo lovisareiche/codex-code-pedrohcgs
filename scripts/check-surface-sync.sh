@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Runs the following pre-commit gates:
 #   1. check-surface-sync.py — count assertions (skills/agents/rules/hooks)
-#      agree across README, CLAUDE.md, guide source + rendered HTML,
+#      agree across README, AGENTS.md, guide source + rendered HTML,
 #      landing page, skill template.
 #      Exit codes: 0 = clean, 1 = drift, 2 = internal error.
 #   2. check-skill-integrity.py — frontmatter/body parity, argument-hint
@@ -11,7 +11,7 @@
 #      2 = internal script error.
 #   3. check-model-versions.sh — flags superseded Claude model versions
 #      presented as current in user-facing surfaces.
-#      SSoT: .claude/references/model-versions.md.
+#      SSoT: .agents/references/model-versions.md.
 #      Exit codes: 0 = clean, 1 = drift, 2 = internal error.
 #   4. check-links.py — every relative markdown link and heading anchor
 #      resolves. Catches renamed/removed files and stale cross-references.
@@ -58,3 +58,4 @@ RC="$SYNC_RC"
 [ "$MODELS_RC" -gt "$RC" ] && RC="$MODELS_RC"
 [ "$LINKS_RC" -gt "$RC" ] && RC="$LINKS_RC"
 exit "$RC"
+

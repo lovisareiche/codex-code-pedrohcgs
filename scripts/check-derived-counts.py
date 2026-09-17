@@ -16,7 +16,7 @@ def read(p):
     except FileNotFoundError: return ""
 
 def n_econ_journals():
-    t = read(".claude/references/journal-profiles.md")
+    t = read(".agents/references/journal-profiles.md")
     seg = re.search(r'^## Econ Top.*?(?=^## (?!#)|\Z)', t, re.S | re.M)
     return len(re.findall(r'^### ', seg.group(0), re.M)) if seg else 0
 
@@ -28,7 +28,7 @@ def n_tikz():
     return len([f for f in os.listdir(d) if f.endswith(".tex")]) if os.path.isdir(d) else 0
 
 def n_translate_phases():
-    ph = set(re.findall(r'^#{2,4} Phase (\d+)', read(".claude/skills/translate-to-quarto/SKILL.md"), re.M))
+    ph = set(re.findall(r'^#{2,4} Phase (\d+)', read(".agents/skills/translate-to-quarto/SKILL.md"), re.M))
     return len(ph - {"0"})            # Phase 0 is pre-flight, not a translation phase
 
 def n_gates():
@@ -45,10 +45,10 @@ def n_gates():
 def _glob_count(pat):
     return len(glob.glob(os.path.join(ROOT, pat)))
 
-def n_skills(): return _glob_count(".claude/skills/*/SKILL.md")
-def n_agents(): return _glob_count(".claude/agents/*.md")
-def n_rules():  return _glob_count(".claude/rules/*.md")
-def n_hooks():  return _glob_count(".claude/hooks/*.py") + _glob_count(".claude/hooks/*.sh")
+def n_skills(): return _glob_count(".agents/skills/*/SKILL.md")
+def n_agents(): return _glob_count(".agents/agents/*.md")
+def n_rules():  return _glob_count(".agents/rules/*.md")
+def n_hooks():  return _glob_count(".agents/hooks/*.py") + _glob_count(".agents/hooks/*.sh")
 
 
 def changelog_current_release():
@@ -57,7 +57,7 @@ def changelog_current_release():
     WHY THIS IS SCOPED, and not simply "scan CHANGELOG.md" the way every other
     row scans a whole file: the changelog keeps the `**Inventory at release: …**`
     line of EVERY past release. Those numbers were TRUE at their release and are
-    a historical record — `.claude/references/audit-pet-peeves.md` #12
+    a historical record — `.agents/references/audit-pet-peeves.md` #12
     ("historical CHANGELOG entries — do not update") is why CHANGELOG.md is not a
     check-surface-sync surface at all. Comparing them against today's disk would
     turn a CORRECT record red, and the only way to quiet that red would be to
@@ -149,19 +149,19 @@ def n_battery_named(letters):
 
 def n_laws():
     # Each law in research-agent-laws.md opens a paragraph as **N. Title.**
-    # Counting the numbered openers keeps CLAUDE.md's "N laws" honest: the
+    # Counting the numbered openers keeps AGENTS.md's "N laws" honest: the
     # count was hand-edited 17 -> 21 once, with nothing to catch a wrong value.
-    t = read(".claude/references/research-agent-laws.md")
+    t = read(".agents/references/research-agent-laws.md")
     return len(re.findall(r'^\*\*(\d+)\.', t, re.M))
 
 def n_rungs():
-    # CLAUDE.md's "the seven rungs" is the same shape as the law count two
+    # AGENTS.md's "the seven rungs" is the same shape as the law count two
     # bullets below it — an enumerable count of another file's headings — and it
     # sat UNGATED in the very hunk where the law count was corrected 17 -> 21 and
     # gated. A planted-lie probe confirmed it: "the ninety-nine rungs" left every
     # gate at exit 0. Not hypothetical drift either: verification-ladder.md grew a
     # whole section this release. Counted from the rung headings themselves.
-    return len(re.findall(r'^## Rung ', read(".claude/references/verification-ladder.md"), re.M))
+    return len(re.findall(r'^## Rung ', read(".agents/references/verification-ladder.md"), re.M))
 
 # English number words 0-99, so a spelled-out count ("Twelve cases",
 # "Twenty-two cases") is compared as a number like a digit claim.
@@ -206,7 +206,7 @@ _NUM = "(" + "|".join([r"\d+"] + sorted(
     key=len, reverse=True)) + ")"
 
 def n_seven_pass():
-    t = read(".claude/skills/seven-pass-review/SKILL.md")
+    t = read(".agents/skills/seven-pass-review/SKILL.md")
     return len(set(re.findall(r'^\| (\d) \|', t, re.M)))
 
 # --- Per-surface expectation --------------------------------------------------
@@ -323,7 +323,7 @@ CHECKS = [
     ("translation phases",    r'(\d+) translation phases',       ["README.md", OPT("guide/workflow-guide.qmd", "shows the phases as a tree, states no total")], n_translate_phases()),
     # The 7-vs-8 drift cluster: seven separate surfaces claimed the wrong gate
     # count after gate 8 landed. Counted from backtest.sh itself.
-    # CLAUDE.md names the gate suite ("the full backtest gate suite") but states
+    # AGENTS.md names the gate suite ("the full backtest gate suite") but states
     # no count; the vaccinate evals README says "the gates in ./scripts/backtest.sh"
     # for the same reason. Both are scanned so a count APPEARING there is caught,
     # neither is required to carry one.
@@ -354,19 +354,19 @@ CHECKS = [
     # r13: the three multi-instance surfaces declare HOW MANY sites they carry
     # (README.md "ten gates" + "10 checkers"; docs/index.html twice; the guide
     # three times), so rewording one of them is as loud as rewording the last.
-    ("backtest gates",        r'(?i)\b' + _NUM + r' (?:gates|checkers)\b', [REQ("README.md", 2), REQ("docs/index.html", 2), OPT("CLAUDE.md", "names the gate suite, states no count"), REQ("guide/workflow-guide.qmd", 3), OPT(".claude/skills/vaccinate/evals/README.md", "refers to the suite by path, states no count"), ".claude/skills/commit/SKILL.md", ".github/CONTRIBUTING.md", "scripts/backtest.sh"], n_gates()),
-    # CLAUDE.md's law count was hand-edited 17 -> 21 and nothing recomputed it,
+    ("backtest gates",        r'(?i)\b' + _NUM + r' (?:gates|checkers)\b', [REQ("README.md", 2), REQ("docs/index.html", 2), OPT("AGENTS.md", "names the gate suite, states no count"), REQ("guide/workflow-guide.qmd", 3), OPT(".agents/skills/vaccinate/evals/README.md", "refers to the suite by path, states no count"), ".agents/skills/commit/SKILL.md", ".github/CONTRIBUTING.md", "scripts/backtest.sh"], n_gates()),
+    # AGENTS.md's law count was hand-edited 17 -> 21 and nothing recomputed it,
     # so "99 laws" would have left every gate green. Counted from the laws file.
-    ("research-agent laws",   r'(\d+) laws\b',                   ["CLAUDE.md"], n_laws()),
-    # The count two bullets ABOVE the law count in the same CLAUDE.md paragraph,
+    ("research-agent laws",   r'(\d+) laws\b',                   ["AGENTS.md"], n_laws()),
+    # The count two bullets ABOVE the law count in the same AGENTS.md paragraph,
     # gated for the same reason and counted the same way — see n_rungs(). The
     # guide states it once more; CHANGELOG.md states it inside the FROZEN
     # v2.5.0 section (the `verification-ladder.md` bullet — named, not given as
     # a line number, because that pointer had already drifted once) and is
     # deliberately not a surface (see
     # changelog_current_release() for why history is never dragged to today).
-    ("verification rungs",    r'(?i)\bthe ' + _NUM + r' rungs\b', ["CLAUDE.md", "guide/workflow-guide.qmd", "docs/workflow-guide.html"], n_rungs()),
-    ("seven-pass lenses",     r'(\d+) forked subagents',         [".claude/skills/seven-pass-review/SKILL.md"], n_seven_pass()),
+    ("verification rungs",    r'(?i)\bthe ' + _NUM + r' rungs\b', ["AGENTS.md", "guide/workflow-guide.qmd", "docs/workflow-guide.html"], n_rungs()),
+    ("seven-pass lenses",     r'(\d+) forked subagents',         [".agents/skills/seven-pass-review/SKILL.md"], n_seven_pass()),
     # The hook-battery case count drifted twice (12→16→…) because prose was
     # edited in parallel with case additions. Anchored on the vignette's own
     # ", about a second" tail so it matches ONLY the battery claim (not generic
@@ -523,3 +523,4 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+

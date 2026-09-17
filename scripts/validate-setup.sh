@@ -20,7 +20,7 @@ warn=0
 fail=0
 
 echo ""
-echo -e "${BOLD}Validating Claude Code Academic Workflow setup...${RESET}"
+echo -e "${BOLD}Validating Codex Academic Workflow setup...${RESET}"
 echo ""
 
 check_required() {
@@ -50,7 +50,7 @@ check_optional() {
 }
 
 echo -e "${BOLD}Required tools:${RESET}"
-check_required "Claude Code"  "claude"   "https://claude.ai/install"
+check_required "Codex"  "claude"   "https://claude.ai/install"
 check_required "XeLaTeX"      "xelatex"  "https://tug.org/texlive/ (or MacTeX: https://tug.org/mactex/)"
 check_required "Quarto"       "quarto"   "https://quarto.org/docs/get-started/"
 check_required "git"          "git"      "https://git-scm.com/downloads"
@@ -81,11 +81,11 @@ else
 fi
 echo ""
 
-echo -e "${BOLD}Claude Code hooks:${RESET}"
-# Executable bit only. Whether each hook registered in .claude/settings.json — and the
+echo -e "${BOLD}Codex hooks:${RESET}"
+# Executable bit only. Whether each hook registered in .agents/settings.json — and the
 # pre-commit entry point below — is wired to a file that exists, is invocable, and is
 # tracked by git is checked by scripts/check-ledger-coverage.py (a gate in backtest.sh).
-hook_dir="$(dirname "$0")/../.claude/hooks"
+hook_dir="$(dirname "$0")/../.agents/hooks"
 if [ -d "$hook_dir" ]; then
     non_exec=$(find "$hook_dir" -maxdepth 1 \( -name "*.py" -o -name "*.sh" \) ! -perm -u+x 2>/dev/null | wc -l | tr -d ' ')
     if [ "$non_exec" -eq 0 ]; then
@@ -93,11 +93,11 @@ if [ -d "$hook_dir" ]; then
         pass=$((pass + 1))
     else
         echo -e "  ${YELLOW}⚠${RESET} $non_exec hook script(s) not executable"
-        echo -e "    Fix: chmod +x .claude/hooks/*.py .claude/hooks/*.sh"
+        echo -e "    Fix: chmod +x .agents/hooks/*.py .agents/hooks/*.sh"
         warn=$((warn + 1))
     fi
 else
-    echo -e "  ${YELLOW}⚠${RESET} .claude/hooks/ directory not found (are you in the project root?)"
+    echo -e "  ${YELLOW}⚠${RESET} .agents/hooks/ directory not found (are you in the project root?)"
     warn=$((warn + 1))
 fi
 
@@ -161,9 +161,9 @@ if [ "$fail" -gt 0 ]; then
     echo ""
     echo -e "${BOLD}What you CAN do right now:${RESET}"
     if [ "$has_claude" = "true" ]; then
-        echo "  - Open Claude Code:                      claude"
+        echo "  - Open Codex:                      claude"
         echo ""
-        echo "  ${BOLD}Inside Claude Code${RESET} (these are slash-commands, NOT shell commands):"
+        echo "  ${BOLD}Inside Codex${RESET} (these are slash-commands, NOT shell commands):"
         if [ "$has_quarto" = "true" ]; then
             echo "    /deploy HelloWorld         # render Quarto sample"
         fi
@@ -181,7 +181,7 @@ if [ "$fail" -gt 0 ]; then
             echo "  (Quarto deploy disabled until you install Quarto: https://quarto.org/docs/get-started/)"
         fi
     else
-        echo "  - Install Claude Code first: https://claude.ai/install"
+        echo "  - Install Codex first: https://claude.ai/install"
         echo "    (Everything else in this template is orchestrated through Claude.)"
     fi
     echo ""
@@ -190,8 +190,9 @@ if [ "$fail" -gt 0 ]; then
 fi
 
 echo -e "${GREEN}Setup looks good!${RESET} Next steps:"
-echo "  1. Open Claude Code in this directory:  claude"
+echo "  1. Open Codex in this directory:  claude"
 echo "  2. Compile the sample deck:              /compile-latex HelloWorld"
 echo "  3. Deploy the Quarto sample:             /deploy HelloWorld"
 echo ""
 exit 0
+

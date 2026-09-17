@@ -2,7 +2,7 @@
 
 <!--
   Copy to your repo root and fill in. This is the answer to "the numbers match — match WHAT?"
-  Protocol: .claude/references/provenance-and-ground-truth.md
+  Protocol: .agents/references/provenance-and-ground-truth.md
 -->
 
 **Status:** [draft | frozen for release X.Y.Z]
@@ -86,3 +86,4 @@ Kinds: `behavioral-default` · `language-surface` · `api-surface` · `internal-
 ## Future ledger entries
 
 Append here whenever the clean-room boundary is crossed with permission.
+

@@ -32,7 +32,7 @@ def _timeout(env_name: str, default: int) -> int:
         return default
 
 # ==============================================================================
-# SCORING RUBRIC (from .claude/rules/quality-gates.md)
+# SCORING RUBRIC (from .agents/rules/quality-gates.md)
 # ==============================================================================
 
 QUARTO_RUBRIC = {
@@ -787,3 +787,4 @@ Exit Codes:
 
 if __name__ == '__main__':
     main()
+

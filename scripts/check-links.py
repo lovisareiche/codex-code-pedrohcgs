@@ -9,7 +9,7 @@ import re, os, sys, glob
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCAN = []
-for pat in ["*.md", ".claude/**/*.md", "templates/**/*.md", ".github/**/*.md", "guide/*.qmd"]:
+for pat in ["*.md", ".agents/**/*.md", "templates/**/*.md", ".github/**/*.md", "guide/*.qmd"]:
     SCAN += glob.glob(os.path.join(ROOT, pat), recursive=True)
 SCAN = sorted(set(SCAN))
 
@@ -87,3 +87,4 @@ if bad:
     sys.exit(1)
 print(f"check-links: all relative links and anchors resolve ({len(SCAN)} files scanned)")
 sys.exit(0)
+

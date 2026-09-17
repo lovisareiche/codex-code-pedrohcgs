@@ -7,7 +7,7 @@
 
 > Write this **before** the screen runs. A rubric invented per candidate is not a rubric — it is
 > the screener's taste, applied N times
-> ([`research-agent-laws.md`](../.claude/references/research-agent-laws.md) law 21).
+> ([`research-agent-laws.md`](../.agents/references/research-agent-laws.md) law 21).
 >
 > **Set the default by asking which error you could still catch later.** A wrong INCLUDE
 > survives to the next stage, where someone sees it. A wrong EXCLUDE leaves no trace anywhere —
@@ -141,6 +141,7 @@ dropped candidate is the error nothing downstream ever surfaces.
 
 ## Cross-references
 
-- [`research-agent-laws.md`](../.claude/references/research-agent-laws.md) — law 21 (screens and waves), law 1 (read the artifact, and the join that dropped rows)
-- [`orchestrator-protocol.md`](../.claude/rules/orchestrator-protocol.md) — screening fan-outs as a runtime primitive
+- [`research-agent-laws.md`](../.agents/references/research-agent-laws.md) — law 21 (screens and waves), law 1 (read the artifact, and the join that dropped rows)
+- [`orchestrator-protocol.md`](../.agents/rules/orchestrator-protocol.md) — screening fan-outs as a runtime primitive
 - [`executor-contract.md`](executor-contract.md) — the dispatch contract each screener is launched under
+

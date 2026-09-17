@@ -1,6 +1,6 @@
 # Preregistration Template
 
-This template is consumed by `.claude/skills/preregister/SKILL.md`. It contains three style sections (OSF, AsPredicted, AEA RCT Registry). The skill picks one based on `--style` or the field default.
+This template is consumed by `.agents/skills/preregister/SKILL.md`. It contains three style sections (OSF, AsPredicted, AEA RCT Registry). The skill picks one based on `--style` or the field default.
 
 **Output convention.** The skill writes the chosen style's filled-in form to `quality_reports/preregistrations/YYYY-MM-DD_<slug>.md` (gitignored). The user uploads it to the registry; this template is *not* a registry submission tool.
 
@@ -231,6 +231,7 @@ The mapping is approximate — registries differ in granularity. When in doubt, 
 ## Where this template lives
 
 - **File:** `templates/preregistration-template.md`
-- **Consumed by:** `.claude/skills/preregister/SKILL.md`
+- **Consumed by:** `.agents/skills/preregister/SKILL.md`
 - **Output:** `quality_reports/preregistrations/YYYY-MM-DD_<slug>.md` (gitignored)
 - **Registry URLs:** OSF (osf.io/registries), AsPredicted (aspredicted.org), AEA RCT (socialscienceregistry.org)
+

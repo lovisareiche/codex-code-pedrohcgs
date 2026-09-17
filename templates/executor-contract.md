@@ -1,11 +1,11 @@
 # Executor Contract: [Task Title]
 
 **Date:** [YYYY-MM-DD]
-**Dispatched to:** [agent / model tier] — see [`model-routing.md`](../.claude/rules/model-routing.md)
+**Dispatched to:** [agent / model tier] — see [`model-routing.md`](../.agents/rules/model-routing.md)
 **Status:** DRAFT | DISPATCHED | RETURNED | ACCEPTED
 
 > Give an executor the **goal and the acceptance bar — never the implementation**
-> ([`research-agent-laws.md`](../.claude/references/research-agent-laws.md) law 7). A prescribed
+> ([`research-agent-laws.md`](../.agents/references/research-agent-laws.md) law 7). A prescribed
 > mechanism is a hypothesis wearing the clothes of an instruction.
 
 ---
@@ -52,7 +52,7 @@ a parallel wave, to another executor running right now.
 **Done** means the gate was **run** and is green, and the work is committed and pushed **where
 the executor was authorized to commit** — reported in that order and not before (law 19). A gate
 left for a pre-commit hook to discover is a gate that was not run. Committing is itself gated: if
-this repo requires explicit sign-off to commit ([`/commit`](../.claude/skills/commit/SKILL.md)),
+this repo requires explicit sign-off to commit ([`/commit`](../.agents/skills/commit/SKILL.md)),
 a delegated executor's *Done* is **gate-green and handed back with evidence**, and the commit is
 a separate authorized step — never something the executor does on its own to satisfy this line.
 
@@ -131,7 +131,8 @@ any file under `outputs/` other than the new audit CSV.
 
 ## Cross-references
 
-- [`research-agent-laws.md`](../.claude/references/research-agent-laws.md) — laws 7, 8, 18, 19
-- [`orchestrator-protocol.md`](../.claude/rules/orchestrator-protocol.md) — the fan-out runtime this contract is dispatched into
+- [`research-agent-laws.md`](../.agents/references/research-agent-laws.md) — laws 7, 8, 18, 19
+- [`orchestrator-protocol.md`](../.agents/rules/orchestrator-protocol.md) — the fan-out runtime this contract is dispatched into
 - [`screening-rubric.md`](screening-rubric.md) — the screening counterpart, when the executor's job is to triage rather than to build
 - [`requirements-spec.md`](requirements-spec.md) — for the upstream question of *what is required* before anything is dispatched
+

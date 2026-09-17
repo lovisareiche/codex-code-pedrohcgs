@@ -13,7 +13,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Files permitted at the repository root. Anything else is clutter until allowlisted.
 ROOT_ALLOW = {
-    "README.md", "CLAUDE.md", "MEMORY.md", "CHANGELOG.md", "TROUBLESHOOTING.md",
+    "README.md", "AGENTS.md", "MEMORY.md", "CHANGELOG.md", "TROUBLESHOOTING.md",
+    "CODEX_MIGRATION.md",
     "LICENSE", "CITATION.cff", ".gitignore", ".gitattributes",
     "Bibliography_base.bib", ".DS_Store",
     # Records which source produced the current rendered artifacts. Must live at
@@ -25,7 +26,7 @@ ROOT_ALLOW = {
     "voice-profile.md",
 }
 ROOT_ALLOW_DIRS = {
-    ".claude", ".git", ".github", ".githooks", ".vscode", "Figures", "Preambles",
+    ".agents", ".codex", ".git", ".github", ".githooks", ".vscode", "Figures", "Preambles",
     "Quarto", "Slides", "docs", "explorations", "guide", "master_supporting_docs",
     "quality_reports", "scripts", "templates",
 }
@@ -48,7 +49,7 @@ ARCHIVE_DIRS = ["explorations", "master_supporting_docs"]
 
 def tracked():
     r = subprocess.run(["git", "-C", ROOT, "ls-files"], capture_output=True, text=True)
-    return [f for f in r.stdout.split("\n") if f]
+    return [f for f in r.stdout.split("\n") if f and os.path.exists(os.path.join(ROOT, f))]
 
 def main():
     files = tracked()
@@ -129,3 +130,4 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+

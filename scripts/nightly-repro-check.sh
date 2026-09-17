@@ -3,7 +3,7 @@
 # Nightly reproducibility-drift check (cron-able; no Claude/auth needed).
 #
 # A thin LOCAL equivalent of the "Reproducibility drift" Routine in
-# .claude/references/scheduled-routines.md, for users who prefer a machine
+# .agents/references/scheduled-routines.md, for users who prefer a machine
 # cron over a managed Routine. It does NOT re-run analysis — it flags
 # passport claims whose source_file / output_file, OR any file declared as a
 # display in appears_in, is newer than the claim's last_verified_on (i.e. the
@@ -11,7 +11,7 @@
 # out of step, since it was last checked). Exits 1 if any claim is stale, so
 # cron can email you.
 #
-# For the full re-audit, run /audit-reproducibility inside Claude Code (or
+# For the full re-audit, run /audit-reproducibility inside Codex (or
 # prefer the managed Routine, which survives a closed laptop).
 #
 # Usage:  ./scripts/nightly-repro-check.sh   (run from the repo root or via cron)
@@ -84,3 +84,4 @@ if stale:
     sys.exit(1)
 print("All tracked claims fresh (no source/output/display newer than last_verified_on).")
 PY
+

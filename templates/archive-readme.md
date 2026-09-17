@@ -1,5 +1,5 @@
 <!-- EXPLORATION ABANDONMENT LOG — copy into explorations/<name>/README.md when
-     shelving a research sandbox (see .claude/rules/exploration-folder-protocol.md).
+     shelving a research sandbox (see .agents/rules/exploration-folder-protocol.md).
      This is NOT a replication-package README — for that deposit, use /replication-package. -->
 
 # Abandoned: [Project Name] ([DATE RANGE])
@@ -16,3 +16,4 @@
 
 ## Would Revisiting Require
 - [What would need to be true to try this again?]
+

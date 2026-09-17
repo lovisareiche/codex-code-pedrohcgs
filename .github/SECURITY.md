@@ -1,6 +1,6 @@
 # Security Policy
 
-This is a template for academic research workflows. It ships **hooks that execute locally** (`.claude/hooks/*.py`, `.githooks/pre-commit`), **skills that drive autonomous review loops**, and **guidance for handling restricted/confidential data** — so security reports are taken seriously even though the repo contains no service or secrets itself.
+This is a template for academic research workflows. It ships **hooks that execute locally** (`.agents/hooks/*.py`, `.githooks/pre-commit`), **skills that drive autonomous review loops**, and **guidance for handling restricted/confidential data** — so security reports are taken seriously even though the repo contains no service or secrets itself.
 
 ## Reporting a vulnerability
 
@@ -12,7 +12,7 @@ In scope, for example:
 - Bypasses of `git-guardrails.py` (destructive-git blocking) or the pre-commit gate.
 - A skill/hook that could exfiltrate or overwrite user data outside the repo.
 - Incorrect security guidance (e.g., a documented pattern that claims to sandbox but does not — see the `allowed-tools` vs `disallowed-tools` note in `templates/skill-template.md`).
-- Flaws in the confidential-data guidance (`.claude/rules/confidential-data.md`) that could lead to restricted-data exposure.
+- Flaws in the confidential-data guidance (`.agents/rules/confidential-data.md`) that could lead to restricted-data exposure.
 
 ## What to expect
 
@@ -20,5 +20,6 @@ Solo-maintained academic project: acknowledgement within a week is the goal, a f
 
 ## Not in scope
 
-- Vulnerabilities in Claude Code itself → report to [Anthropic](https://www.anthropic.com/responsible-disclosure-policy).
+- Vulnerabilities in Codex itself → report to [Anthropic](https://www.anthropic.com/responsible-disclosure-policy).
 - Vulnerabilities in third-party R/Stata/Python packages the skills orchestrate → report upstream.
+

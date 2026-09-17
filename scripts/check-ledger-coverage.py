@@ -13,18 +13,17 @@ Both directions fail here:
   2. a ledger row naming a checker that is no longer on disk — a qualification for
      a ghost, which reads as coverage the repo does not have.
 
-Plus wiring: a mistyped path in `.claude/settings.json` costs you the GUARDING,
-and no other gate in the suite notices — nothing else reads the settings file
-against the disk, so a hook can be wired to nothing while every check stays green.
+When a runtime hook settings file exists, wiring is checked too: a mistyped path
+costs you the guard, and no other gate in the suite notices.
 That is the failure this checker exists to catch. The symptom is not silence, and
 it is not legible either: `python3 <missing-path>` exits 2, which a PreToolUse hook
 means as BLOCK, so a typo on a guard denies every matching call with an interpreter
 error nobody reads as a config error; a bare path exits 127 (126 if present but not
 executable), a non-blocking error that scrolls past while the guard stops guarding.
 
-Registered checks are derived LIVE from three sources of truth — the `run` lines in
-`scripts/backtest.sh`, the hook commands in `.claude/settings.json`, and the
-`.githooks/pre-commit` entry point. Never a hardcoded list: a list here would drift
+Registered checks are derived LIVE from the `run` lines in `scripts/backtest.sh`,
+the optional hook commands in `.agents/settings.json`, and the `.githooks/pre-commit`
+entry point. Never a hardcoded list: a list here would drift
 exactly the way the ledger does, and this checker would be the last to notice.
 
 Exit: 0 agreement (warnings allowed), 1 disagreement, 2 could not run.
@@ -35,7 +34,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCRIPTS = os.path.join(ROOT, "scripts")
 
 LEDGER = "quality_reports/qualification/LEDGER.md"
-SETTINGS = ".claude/settings.json"
+SETTINGS = ".agents/settings.json"
 BACKTEST = "scripts/backtest.sh"
 PRECOMMIT = ".githooks/pre-commit"
 
@@ -54,7 +53,7 @@ INTERPRETERS = {"python", "python3", "bash", "sh", "zsh", "node", "Rscript", "pe
 SCRIPT_TOKEN = re.compile(r'^[\w./-]+\.(?:py|sh)$')
 
 # Where an unqualified (directory-less) ledger name may live.
-SEARCH_DIRS = ["", "scripts", ".claude/hooks", ".claude/scripts", ".githooks"]
+SEARCH_DIRS = ["", "scripts", ".agents/hooks", ".agents/scripts", ".githooks"]
 
 
 class CannotRun(Exception):
@@ -105,21 +104,22 @@ def registered():
         path, interp = script_of(cmd, f"{BACKTEST} gate '{label}'")
         out.append(("backtest gate", path, interp, label))
 
-    try:
-        cfg = json.loads(read(SETTINGS))
-    except json.JSONDecodeError as e:
-        raise CannotRun(f"{SETTINGS}: invalid JSON ({e})")
-    hooks = cfg.get("hooks")
-    if not isinstance(hooks, dict) or not hooks:
-        raise CannotRun(f"{SETTINGS}: no `hooks` object — the session hooks are registered there, "
-                        "and an empty one means either a broken file or silently no hooks at all")
-    for event in sorted(hooks):
-        for group in hooks[event] or []:
-            for h in group.get("hooks") or []:
-                if h.get("type") != "command":
-                    continue
-                path, interp = script_of(h.get("command", ""), f"{SETTINGS} {event}")
-                out.append(("settings hook", path, interp, event))
+    settings_path = os.path.join(ROOT, SETTINGS)
+    if os.path.isfile(settings_path):
+        try:
+            cfg = json.loads(read(SETTINGS))
+        except json.JSONDecodeError as e:
+            raise CannotRun(f"{SETTINGS}: invalid JSON ({e})")
+        hooks = cfg.get("hooks")
+        if not isinstance(hooks, dict):
+            raise CannotRun(f"{SETTINGS}: `hooks` must be an object")
+        for event in sorted(hooks):
+            for group in hooks[event] or []:
+                for h in group.get("hooks") or []:
+                    if h.get("type") != "command":
+                        continue
+                    path, interp = script_of(h.get("command", ""), f"{SETTINGS} {event}")
+                    out.append(("settings hook", path, interp, event))
 
     out.append(("entry point", os.path.join(ROOT, PRECOMMIT), None, "pre-commit"))
     return out
@@ -182,13 +182,14 @@ def ledger_names(known):
 
 def named_by(path, names):
     """Does `names` (basename -> {tokens}) name this path? A token with a directory must match it."""
-    rel = os.path.relpath(path, ROOT)
-    return any("/" not in tok or rel.endswith(tok)
+    rel = os.path.relpath(path, ROOT).replace(os.sep, "/")
+    return any("/" not in tok or rel.endswith(tok.replace("\\", "/"))
                for tok in names.get(os.path.basename(path), ()))
 
 
 def resolve(tok):
     """Where a ledger name lives on disk, or None."""
+    tok = tok.replace("/", os.sep).replace("\\", os.sep)
     cands = [os.path.join(ROOT, tok)] if "/" in tok else \
             [os.path.join(ROOT, d, tok) for d in SEARCH_DIRS]
     return next((os.path.normpath(c) for c in cands if os.path.isfile(c)), None)
@@ -213,7 +214,7 @@ def main():
         print("  A check that could not run is not a passing check.", file=sys.stderr)
         return 2
 
-    rel = lambda p: os.path.relpath(p, ROOT)
+    rel = lambda p: os.path.relpath(p, ROOT).replace(os.sep, "/")
     errs, warns = [], []
     n = lambda src: sum(1 for s, _, _, _ in checks if s == src)
     art = lambda src: ("an " if src[0] in "aeiou" else "a ") + src
@@ -302,3 +303,4 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+

@@ -10,14 +10,14 @@ import re, os, sys, glob
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SPEC_FIELDS = {"name","description","license","compatibility","metadata","allowed-tools"}
-# Fields Claude Code documents beyond the portable spec (verified 2026-08-21).
+# Fields Codex documents beyond the portable spec (verified 2026-08-21).
 CC_ONLY = {"when_to_use","argument-hint","arguments","disable-model-invocation","user-invocable",
            "disallowed-tools","model","effort","context","agent","background","hooks","paths","shell"}
 NAME_RE = re.compile(r'[a-z0-9]+(-[a-z0-9]+)*')
 
 def main():
     errs, warns = [], []
-    skills = sorted(glob.glob(os.path.join(ROOT, ".claude/skills/*/SKILL.md")))
+    skills = sorted(glob.glob(os.path.join(ROOT, ".agents/skills/*/SKILL.md")))
     if not skills:
         print("check-spec-conformance: no skills found", file=sys.stderr); return 2
     for f in skills:
@@ -46,11 +46,11 @@ def main():
         keys = set(re.findall(r'^([a-zA-Z_-]+):', fm, re.M))
         unknown = keys - SPEC_FIELDS - CC_ONLY
         if unknown:
-            errs.append(f"{rel}: field(s) {sorted(unknown)} read by neither the spec nor Claude Code "
+            errs.append(f"{rel}: field(s) {sorted(unknown)} read by neither the spec nor Codex "
                         f"— move under 'metadata:'")
         nonportable = keys & CC_ONLY
         if nonportable:
-            warns.append(f"{rel}: {sorted(nonportable)} are Claude Code-only "
+            warns.append(f"{rel}: {sorted(nonportable)} are Codex-only "
                          f"(blocks claude.ai upload / Skills API / Cowork / Routines)")
     print(f"check-spec-conformance: {len(skills)} skills audited")
     if errs:
@@ -65,3 +65,4 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+

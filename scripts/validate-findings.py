@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate a review-findings array against .claude/references/finding-schema.json.
+"""Validate a review-findings array against .agents/references/finding-schema.json.
 
 Turns the FINDING contract from prose into a gate with an exit code.
 
@@ -12,7 +12,7 @@ Exit: 0 valid, 1 invalid, 2 internal error.
 import json, sys, os, hashlib, re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SCHEMA = os.path.join(ROOT, ".claude", "references", "finding-schema.json")
+SCHEMA = os.path.join(ROOT, ".agents", "references", "finding-schema.json")
 
 def finding_id(file, line, locus, lens=None):
     # lens is deliberately NOT in the identity: the same defect found by two
@@ -88,3 +88,4 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+

@@ -6,7 +6,7 @@ Top failure modes newcomers hit, with the fix. If you're stuck somewhere else, r
 
 ### `claude: command not found`
 
-Claude Code isn't installed. Install it from [claude.ai/install](https://claude.ai/install) (or your OS's package manager). Then re-run `./scripts/validate-setup.sh`.
+Codex isn't installed. Install it from [claude.ai/install](https://claude.ai/install) (or your OS's package manager). Then re-run `./scripts/validate-setup.sh`.
 
 ### `xelatex: command not found`
 
@@ -28,18 +28,18 @@ The Stata pipeline skill needs the [`stata-mcp`](https://github.com/SepineTam/st
 claude mcp add stata-mcp --scope user -- uvx stata-mcp
 ```
 
-`uvx` is the `uv` package runner (`brew install uv` if missing). The MCP server requires a local Stata installation — it's a bridge, not a replacement. Once installed, restart your Claude Code session so the MCP server registers.
+`uvx` is the `uv` package runner (`brew install uv` if missing). The MCP server requires a local Stata installation — it's a bridge, not a replacement. Once installed, restart your Codex session so the MCP server registers.
 
-Verify with `claude mcp list` — `stata-mcp` should appear with status `connected`. The skill also halts if Stata itself is not on `PATH`; the install instructions documented in [`/stata-replication`](.claude/skills/stata-replication/SKILL.md) Phase 0 cover both pre-flight checks.
+Verify with `claude mcp list` — `stata-mcp` should appear with status `connected`. The skill also halts if Stata itself is not on `PATH`; the install instructions documented in [`/stata-replication`](.agents/skills/stata-replication/SKILL.md) Phase 0 cover both pre-flight checks.
 
 ### Claude keeps asking permission for every tool
 
 Default permission mode prompts on every `Bash`, `Edit`, `Write`. Two fixes:
 
-- **Auto-accept edits** — keybinding in Claude Code; see guide's [permission modes section](https://psantanna.com/claude-code-my-workflow/workflow-guide.html#settings---permissions-and-hooks).
+- **Auto-accept edits** — keybinding in Codex; see guide's [permission modes section](https://psantanna.com/claude-code-my-workflow/workflow-guide.html#settings---permissions-and-hooks).
 - **Bypass mode** — `claude --permission-mode acceptEdits` (auto-approves edits but still prompts for sensitive ops) or `claude --permission-mode bypassPermissions` (skips prompts entirely — use only on trusted repos).
 
-The template's `.claude/settings.json` pre-approves ~100 common patterns, so even at default most routine work is unattended.
+The template's `.agents/settings.json` pre-approves ~100 common patterns, so even at default most routine work is unattended.
 
 ## Models and API
 
@@ -50,8 +50,8 @@ Anthropic retires **Sonnet 4** and the **original Opus 4** on **2026-06-15**. If
 Migration checklist:
 
 - **Check `ANTHROPIC_MODEL` env:** `echo $ANTHROPIC_MODEL` — if it's `claude-sonnet-4-*` or `claude-opus-4-*` (without a 4.5/4.6/4.7 suffix), update.
-- **Check `.claude/settings.json` and `.claude/settings.local.json`** for any `model:` override at the project layer.
-- **Check agent frontmatter:** `grep -rn "claude-sonnet-4\b\|claude-opus-4\b" .claude/agents/` — agents that pin to retired models will fall through to inherit, which is usually fine, but worth knowing.
+- **Check `.agents/settings.json` and `.agents/settings.local.json`** for any `model:` override at the project layer.
+- **Check agent frontmatter:** `grep -rn "claude-sonnet-4\b\|claude-opus-4\b" .agents/agents/` — agents that pin to retired models will fall through to inherit, which is usually fine, but worth knowing.
 - **Check CI:** any GitHub Actions or other CI that calls `claude -p` with `--model`.
 
 Recommended replacements: `claude-sonnet-4-6` for Sonnet 4, `claude-opus-4-8` for original Opus 4 (the newest Opus, GA 2026-05-28, same $5/$25 pricing as 4.6/4.7). The 1M-context beta for Sonnet 4.5 / Sonnet 4 retired 2026-04-30 — migrate to Sonnet 4.6 for long-context workflows.
@@ -80,20 +80,20 @@ You likely invoked `quarto render` from the wrong cwd. Run it from the repo root
 
 ### `/extract-tikz` halts at prevention pre-check
 
-Good — the pre-check caught a P3 (bare `scale=`) or P4 (missing directional keyword on an edge label) violation. Fix the offending line in the Beamer source and re-run. See `.claude/rules/tikz-prevention.md`.
+Good — the pre-check caught a P3 (bare `scale=`) or P4 (missing directional keyword on an edge label) violation. Fix the offending line in the Beamer source and re-run. See `.agents/rules/tikz-prevention.md`.
 
 ## Git / hooks / CI
 
 ### Hook script permission denied
 
-`chmod +x .claude/hooks/*.py .claude/hooks/*.sh`. `./scripts/validate-setup.sh` also reports non-executable hooks.
+`chmod +x .agents/hooks/*.py .agents/hooks/*.sh`. `./scripts/validate-setup.sh` also reports non-executable hooks.
 
 ### Pre-compact hook didn't save the plan
 
-The PreCompact hook (`.claude/hooks/pre-compact.py`) writes state to `~/.claude/sessions/<hash>/`. If the state isn't there after compaction:
+The PreCompact hook (`.agents/hooks/pre-compact.py`) writes state to `~/.agents/sessions/<hash>/`. If the state isn't there after compaction:
 
-- Check the hook's exit code: `echo '{}' | python3 .claude/hooks/pre-compact.py` should exit 0.
-- Check permissions on `~/.claude/sessions/`.
+- Check the hook's exit code: `echo '{}' | python3 .agents/hooks/pre-compact.py` should exit 0.
+- Check permissions on `~/.agents/sessions/`.
 - Check the session hash matches — compaction logs the hash.
 
 ### `/commit` fails with `quality_score.py` below threshold
@@ -120,43 +120,43 @@ You ran `03_analyze.R` directly instead of `00_run_all.R`. Re-run `00_run_all.R`
 
 ### "Prompts fire despite `bypassPermissions`"
 
-Mid-session permission-mode toggles override file settings until session end. The 6-tier stack (VSCode user → VSCode workspace → CLI user `~/.claude/settings.json` → project `.claude/settings.json` → project-local `.claude/settings.local.json` → in-session runtime) is **last-wins**. Run `/permission-check` — it diffs every layer and reports which wins. Then either exit and restart the session, or `/permission-mode bypassPermissions` to set it for the current session.
+Mid-session permission-mode toggles override file settings until session end. The 6-tier stack (VSCode user → VSCode workspace → CLI user `~/.agents/settings.json` → project `.agents/settings.json` → project-local `.agents/settings.local.json` → in-session runtime) is **last-wins**. Run `/permission-check` — it diffs every layer and reports which wins. Then either exit and restart the session, or `/permission-mode bypassPermissions` to set it for the current session.
 
-### `/permission-check` asks before reading `~/.claude/`
+### `/permission-check` asks before reading `~/.agents/`
 
 That's intentional. Host-global config can contain unrelated paths and secrets. Phase A (repo-local) is automatic; Phase B (host-global, with key redaction) requires explicit confirmation. See [CHANGELOG v1.6.0 — privacy boundary](CHANGELOG.md) for context.
 
 ### Seeing too many permission prompts?
 
-If `/permission-check` confirms your config is permissive but you're still being prompted, the built-in Claude Code skill **`/fewer-permission-prompts`** (Apr 2026) scans your transcripts for common read-only Bash and MCP tool calls and proposes a prioritized allowlist for `.claude/settings.json`. Pairs with our `/permission-check`: `permission-check` diagnoses; `fewer-permission-prompts` remediates.
+If `/permission-check` confirms your config is permissive but you're still being prompted, the built-in Codex skill **`/fewer-permission-prompts`** (Apr 2026) scans your transcripts for common read-only Bash and MCP tool calls and proposes a prioritized allowlist for `.agents/settings.json`. Pairs with our `/permission-check`: `permission-check` diagnoses; `fewer-permission-prompts` remediates.
 
 ### Statusline shows `[UNKNOWN]` or blank
 
-Session JSON parse failure. Check `.claude/scripts/statusline.sh` is executable (`chmod +x`) and that `python3` is on `PATH`. Fallback output is `[?] <model> @ <pwd>` — if you see that, the hook caught a malformed session file. Restart Claude Code.
+Session JSON parse failure. Check `.agents/scripts/statusline.sh` is executable (`chmod +x`) and that `python3` is on `PATH`. Fallback output is `[?] <model> @ <pwd>` — if you see that, the hook caught a malformed session file. Restart Codex.
 
-### Bypass mode still prompts on edits to `.claude/`, `.git/`, `.vscode/` (v1.8.0)
+### Bypass mode still prompts on edits to `.agents/`, `.git/`, `.vscode/` (v1.8.0)
 
 This is **not a bug.** Per Anthropic's [permission-modes docs](https://code.claude.com/docs/en/permission-modes), a small set of paths are *protected* and never auto-approved in any mode except `auto`. The protected list as of Apr 2026:
 
-- Directories: `.git`, `.vscode`, `.idea`, `.husky`, `.claude` (carve-outs: `.claude/commands`, `.claude/agents`, `.claude/skills`, `.claude/worktrees` — these *do* auto-approve under bypass).
+- Directories: `.git`, `.vscode`, `.idea`, `.husky`, `.claude` (carve-outs: `.agents/commands`, `.agents/agents`, `.agents/skills`, `.agents/worktrees` — these *do* auto-approve under bypass).
 - Files: `.gitconfig`, `.gitmodules`, `.bashrc`, `.bash_profile`, `.zshrc`, `.zprofile`, `.profile`, `.ripgreprc`, `.mcp.json`, `.claude.json`.
 
-So edits to `.claude/references/`, `.claude/rules/`, `.claude/hooks/`, `.claude/scripts/` will always prompt under bypass. The only mode that doesn't fire an interactive prompt on protected paths is **auto mode** — which, since 2026-08-14, is the *default* starting mode for new interactive sessions on Pro, Max, and Team — protected-path writes route through a classifier model instead. The classifier is still a gate (it can block) — it's just not human-in-the-loop, so you don't get the click-through interruption. Auto mode is available on Pro, Max, and Team (and is the default starting mode for new interactive sessions there since 2026-08-14), plus Bedrock, Google Cloud's Agent Platform, and Microsoft Foundry with no opt-in flag; toggle visibility in the VSCode mode dropdown by setting `allowDangerouslySkipPermissions: true` in `.vscode/settings.json` and reloading the window.
+So edits to `.agents/references/`, `.agents/rules/`, `.agents/hooks/`, `.agents/scripts/` will always prompt under bypass. The only mode that doesn't fire an interactive prompt on protected paths is **auto mode** — which, since 2026-08-14, is the *default* starting mode for new interactive sessions on Pro, Max, and Team — protected-path writes route through a classifier model instead. The classifier is still a gate (it can block) — it's just not human-in-the-loop, so you don't get the click-through interruption. Auto mode is available on Pro, Max, and Team (and is the default starting mode for new interactive sessions there since 2026-08-14), plus Bedrock, Google Cloud's Agent Platform, and Microsoft Foundry with no opt-in flag; toggle visibility in the VSCode mode dropdown by setting `allowDangerouslySkipPermissions: true` in `.vscode/settings.json` and reloading the window.
 
 Since **2026-08-14** auto mode is the **default starting mode** for new interactive sessions on Pro, Max, and Team, so most users now have it. If you are on a plan or provider without it, or you have deliberately pinned `bypassPermissions`, two workarounds:
 
-1. **Edit through the Bash tool** — `python3 -c '...'` or `python3 << EOF ... EOF` heredoc patterns can write to `.claude/references/` etc. without firing the protected-paths gate, because Bash isn't subject to it the same way Edit is. Useful for batch refactors.
-2. **Move the edit out of `.claude/`** when possible — keep field-customization content under `templates/` or root-level documentation that's not protected.
+1. **Edit through the Bash tool** — `python3 -c '...'` or `python3 << EOF ... EOF` heredoc patterns can write to `.agents/references/` etc. without firing the protected-paths gate, because Bash isn't subject to it the same way Edit is. Useful for batch refactors.
+2. **Move the edit out of `.agents/`** when possible — keep field-customization content under `templates/` or root-level documentation that's not protected.
 
 ### `.vscode/settings.json` — `claudeCode.allowDangerouslySkipPermissions` is the wrong key (v1.8.0)
 
-The Claude Code VSCode extension expects **`allowDangerouslySkipPermissions: true`** (no `claudeCode.` prefix). The prefixed form `claudeCode.allowDangerouslySkipPermissions` is silently ignored, leaving the protected-paths gate active even with broad CLI bypass. Fix: drop the `claudeCode.` prefix on that one key (`claudeCode.initialPermissionMode` keeps its prefix). Reload the VSCode window after editing `.vscode/settings.json` for the change to register.
+The Codex VSCode extension expects **`allowDangerouslySkipPermissions: true`** (no `claudeCode.` prefix). The prefixed form `claudeCode.allowDangerouslySkipPermissions` is silently ignored, leaving the protected-paths gate active even with broad CLI bypass. Fix: drop the `claudeCode.` prefix on that one key (`claudeCode.initialPermissionMode` keeps its prefix). Reload the VSCode window after editing `.vscode/settings.json` for the change to register.
 
 ## Peer-review pipeline (v1.5.0)
 
 ### `/review-paper --peer AER` fails with "journal not found"
 
-The target must be in [`.claude/references/journal-profiles.md`](.claude/references/journal-profiles.md). Ships with AER / QJE / JPE / ECMA / ReStud. To add your field's journal, copy [`templates/journal-profile-template.md`](templates/journal-profile-template.md) into `journal-profiles.md` and fill in the 7 schema sections (focus, bar, domain adjustments, methods adjustments, typical concerns, referee-pool weights, optional table format).
+The target must be in [`.agents/references/journal-profiles.md`](.agents/references/journal-profiles.md). Ships with AER / QJE / JPE / ECMA / ReStud. To add your field's journal, copy [`templates/journal-profile-template.md`](templates/journal-profile-template.md) into `journal-profiles.md` and fill in the 7 schema sections (focus, bar, domain adjustments, methods adjustments, typical concerns, referee-pool weights, optional table format).
 
 ### Referees return near-identical reports
 
@@ -174,7 +174,7 @@ Use `--r2` / `--r3` to continue a prior review. The editor agent reloads the pre
 
 ### Adding a new skill / agent / rule breaks the gate
 
-Expected. The gate counts `.claude/skills/` on disk vs prose assertions. After adding a skill, update the counts in README.md, CLAUDE.md (if mentioned), `guide/workflow-guide.qmd`, `docs/index.html` og:description, and `templates/skill-template.md`. The script tells you which are stale.
+Expected. The gate counts `.agents/skills/` on disk vs prose assertions. After adding a skill, update the counts in README.md, AGENTS.md (if mentioned), `guide/workflow-guide.qmd`, `docs/index.html` og:description, and `templates/skill-template.md`. The script tells you which are stale.
 
 ## Pre-Flight Reports (v1.6.0)
 
@@ -264,9 +264,9 @@ If a finding looks wrong (e.g., a shell command flag being treated as a skill fl
 
 ### `CronCreate` dies when my session closes
 
-By design. `CronCreate` schedules in the Claude Code REPL's own event loop — when the REPL exits (you close the window, Claude Code crashes, your usage hits a rate limit and the session terminates), the cron goes with it. Even `durable: true` doesn't save you if no REPL is running at fire time.
+By design. `CronCreate` schedules in the Codex REPL's own event loop — when the REPL exits (you close the window, Codex crashes, your usage hits a rate limit and the session terminates), the cron goes with it. Even `durable: true` doesn't save you if no REPL is running at fire time.
 
-For **short-delay polling within an active session** (e.g. "check the build every 5 minutes while I work"), `CronCreate` is fine. For anything that must **survive session termination**, use **Claude Code Routines** (Apr 2026) instead. Routines run on Anthropic's web infrastructure — your Mac does not need to be online for each fire. Use Routines for: scheduled audits, overnight batch work, autonomous execution while you're away. See `.claude/references/audit-pet-peeves.md` entry 17 for the full comparison.
+For **short-delay polling within an active session** (e.g. "check the build every 5 minutes while I work"), `CronCreate` is fine. For anything that must **survive session termination**, use **Codex Routines** (Apr 2026) instead. Routines run on Anthropic's web infrastructure — your Mac does not need to be online for each fire. Use Routines for: scheduled audits, overnight batch work, autonomous execution while you're away. See `.agents/references/audit-pet-peeves.md` entry 17 for the full comparison.
 
 ### PreCompact keeps blocking even after I approved the plan
 
@@ -276,3 +276,4 @@ You probably have `CLAUDE_PRECOMPACT_BLOCK_ON_DRAFT=1` set in your environment. 
 
 - Read the [guide's troubleshooting section](https://psantanna.com/claude-code-my-workflow/workflow-guide.html#troubleshooting) for longer-form recovery scenarios.
 - Open an issue at <https://github.com/pedrohcgs/claude-code-my-workflow/issues> — the bug-report template asks for the environment details we need to help.
+

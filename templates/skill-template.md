@@ -21,7 +21,7 @@ Create a skill when you find yourself:
 
 ## Template Structure
 
-Copy the structure below to `.claude/skills/[your-skill-name]/SKILL.md`:
+Copy the structure below to `.agents/skills/[your-skill-name]/SKILL.md`:
 
 ```markdown
 ---
@@ -87,7 +87,7 @@ Beyond the basic fields shown above, skills support additional YAML frontmatter 
 |-------|---------|---------|
 | `effort` | Override reasoning effort level | `high` (for review skills), `low` (for formatting) |
 | `context` | Set to `fork` to run in an isolated subagent context | Protects main conversation from verbose output |
-| `agent` | Link to an agent definition in `.claude/agents/` | `proofreader` |
+| `agent` | Link to an agent definition in `.agents/agents/` | `proofreader` |
 | `hooks` | Skill-specific hooks (same syntax as settings.json) | Custom pre/post actions |
 | `model` | Force a specific model | `haiku` (cheaper), `opus` (smarter) |
 | `disable-model-invocation` | Prevent Claude from auto-triggering | `true` (only invoked via `/skill-name`) |
@@ -134,27 +134,27 @@ Set this flag whenever the skill writes a **persistent, load-bearing file** that
 
 The flag still allows direct invocation as `/skill-name` — it only blocks the model from auto-triggering on a heuristic match.
 
-### CLAUDE.md `@import` syntax (Anthropic Apr 2026)
+### AGENTS.md `@import` syntax (Anthropic Apr 2026)
 
-Anthropic's `CLAUDE.md` supports `@path/to/import` to pull in additional files. Example:
+Anthropic's `AGENTS.md` supports `@path/to/import` to pull in additional files. Example:
 
 ```markdown
 See @README.md for project overview and @package.json for available commands.
 
 # Personal overrides
-@~/.claude/my-project-instructions.md
+@~/.agents/my-project-instructions.md
 
 # Domain-specific instructions
 @docs/git-instructions.md
 ```
 
-**This template's `CLAUDE.md` deliberately does NOT use `@import`** — it is deliberately lean, and importing fragments fractures the onboarding context (forkers expect "one file to load at session start"). Mention this here for forkers whose customization grows large enough to warrant splitting; for short CLAUDE.md files, splitting tends to hurt more than help.
+**This template's `AGENTS.md` deliberately does NOT use `@import`** — it is deliberately lean, and importing fragments fractures the onboarding context (forkers expect "one file to load at session start"). Mention this here for forkers whose customization grows large enough to warrant splitting; for short AGENTS.md files, splitting tends to hurt more than help.
 
 ---
 
 ## Writing Effective Descriptions
 
-The `description` field determines when Claude loads your skill. Use this structure:
+The `description` field determines when Codex loads your skill. Use this structure:
 
 ```
 [What it does] + [When to use it] + [Key capabilities]
@@ -199,7 +199,7 @@ description: Reviews econometric specifications for common errors. Use when user
 
 ### Example 1: Citation Cross-Reference Checker
 
-**File:** `.claude/skills/validate-citations/SKILL.md`
+**File:** `.agents/skills/validate-citations/SKILL.md`
 
 ```markdown
 ---
@@ -255,7 +255,7 @@ Step 4: **Report findings**
 
 ### Example 2: Regression Output Formatter
 
-**File:** `.claude/skills/format-regression-tables/SKILL.md`
+**File:** `.agents/skills/format-regression-tables/SKILL.md`
 
 ```markdown
 ---
@@ -337,7 +337,7 @@ Step 4: **Save and verify**
 
 ### Example 3: Experimental Protocol Validator
 
-**File:** `.claude/skills/validate-protocol/SKILL.md`
+**File:** `.agents/skills/validate-protocol/SKILL.md`
 
 ```markdown
 ---
@@ -398,7 +398,7 @@ Step 4: **Generate report**
 ## Testing Your Skill
 
 ### Step 1: Manual Test
-1. Create skill directory: `mkdir -p .claude/skills/your-skill-name`
+1. Create skill directory: `mkdir -p .agents/skills/your-skill-name`
 2. Copy SKILL.md template and customize
 3. Skills hot-reload automatically --- changes are detected without restarting
 4. Trigger skill: Use one of your trigger phrases
@@ -450,6 +450,7 @@ When adapting this template to your domain:
 
 - **File:** `templates/skill-template.md`
 - **Purpose:** Starter for domain-specific skills
-- **Usage:** Copy to `.claude/skills/[name]/SKILL.md`, customize for your field
+- **Usage:** Copy to `.agents/skills/[name]/SKILL.md`, customize for your field
 
-For existing skills examples, see `.claude/skills/` directory (60 skills for LaTeX, R, Quarto, and research workflows).
+For existing skills examples, see `.agents/skills/` directory (60 skills for LaTeX, R, Quarto, and research workflows).
+

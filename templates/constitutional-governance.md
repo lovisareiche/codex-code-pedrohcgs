@@ -17,7 +17,7 @@ Making this distinction explicit prevents:
 
 ## How to Use This Template
 
-1. Copy this file to `.claude/rules/constitutional-governance.md`
+1. Copy this file to `.agents/rules/constitutional-governance.md`
 2. Replace bracketed examples with YOUR non-negotiables
 3. Delete articles that don't apply to your workflow
 4. Add new articles as patterns emerge
@@ -191,4 +191,5 @@ Before finalizing your constitutional governance:
 - [ ] User preferences section populated with flexible patterns
 - [ ] Amendment process understood
 - [ ] Review cadence scheduled
-- [ ] File saved to `.claude/rules/constitutional-governance.md`
+- [ ] File saved to `.agents/rules/constitutional-governance.md`
+
